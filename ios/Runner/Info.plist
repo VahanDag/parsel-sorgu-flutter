@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>Parsel Sorgu App</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>parsel_sorgu_app</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true />
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true />
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true />
+
+		<!-- Share Extension için -->
+		<key>CFBundleDocumentTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Text</string>
+				<key>LSHandlerRank</key>
+				<string>Alternate</string>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>public.text</string>
+					<string>public.plain-text</string>
+					<string>public.url</string>
+				</array>
+			</dict>
+		</array>
+
+		<!-- URL Scheme -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>parselsorgulama</string>
+				</array>
+				<key>CFBundleURLName</key>
+				<string>com.example.parselsorgulama</string>
+			</dict>
+		</array>
+
+		<!-- App Transport Security - TKGM ve Sahibinden için -->
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<true />
+			<key>NSExceptionDomains</key>
+			<dict>
+				<key>sahibinden.com</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<true />
+					<key>NSExceptionAllowsInsecureHTTPLoads</key>
+					<true />
+				</dict>
+				<key>tkgm.gov.tr</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<true />
+					<key>NSExceptionAllowsInsecureHTTPLoads</key>
+					<true />
+				</dict>
+			</dict>
+		</dict>
+
+	</dict>
+</plist>
