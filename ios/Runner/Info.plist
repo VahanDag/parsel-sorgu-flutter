@@ -100,5 +100,9 @@
 			</dict>
 		</dict>
 
+		<!-- Location Permissions -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Parsele olan uzaklığınızı hesaplamak için konumunuza ihtiyacımız var.</string>
+
 	</dict>
 </plist>
