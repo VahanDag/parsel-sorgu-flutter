@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Debug (Clean Logs)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "console": "debugConsole",
+      "debugExternalPackageLibraries": false,
+      "debugSdkLibraries": false,
+      "showDebuggerNumbersAsHex": false,
+      "evaluateGettersInDebugViews": false,
+      "sendLogsToClient": false
+    },
+    {
+      "name": "Flutter Release",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "console": "debugConsole"
+    },
+    {
+      "name": "Flutter Profile",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "console": "debugConsole"
+    }
+  ]
+}
