@@ -35,6 +35,9 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
   
   // Son işlenen URL'i takip etmek için (duplicate events'i önlemek için)
   String? _lastProcessedUrl;
+  
+  // Otomatik URL yükleme için
+  bool _shouldAutoLoad = false;
 
   @override
   void initState() {
@@ -49,10 +52,11 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
       context.read<ParselSearchingBloc>().add(UrlChangedEvent(_urlController.text));
     });
 
-    // İlk URL'yi set et
+    // İlk URL'yi set et ve otomatik aramayı başlat
     if (widget.sharedUrl != null) {
       context.read<ParselSearchingBloc>().add(SetInitialUrlEvent(widget.sharedUrl));
       _urlController.text = widget.sharedUrl!;
+      _shouldAutoLoad = true;
     }
   }
 
@@ -63,6 +67,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
     if (oldWidget.sharedUrl != widget.sharedUrl && widget.sharedUrl != null) {
       context.read<ParselSearchingBloc>().add(SetInitialUrlEvent(widget.sharedUrl));
       _urlController.text = widget.sharedUrl!;
+      _shouldAutoLoad = true;
     }
   }
 
@@ -223,6 +228,16 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                   onWebViewCreated: (controller) {
                     context.read<ParselSearchingBloc>().setWebViewController(controller);
                     print('WebView oluşturuldu');
+                    
+                    // WebView hazır olduğunda otomatik yükleme yap
+                    if (_shouldAutoLoad && widget.sharedUrl != null) {
+                      _shouldAutoLoad = false;
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        if (mounted) {
+                          context.read<ParselSearchingBloc>().add(LoadUrlEvent(widget.sharedUrl!));
+                        }
+                      });
+                    }
                   },
                   onLoadStart: (controller, url) {
                     final urlString = url.toString();

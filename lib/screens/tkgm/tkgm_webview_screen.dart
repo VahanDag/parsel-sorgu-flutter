@@ -37,15 +37,12 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && !_isProcessingLifecycleChange) {
       _isProcessingLifecycleChange = true;
-      
+
       // Uygulama ön plana geldiğinde konum durumunu kontrol et
       final tkgmState = context.read<TkgmBloc>().state;
       // Sadece kullanıcı konum butonuna bastıysa ve hata durumundaysa kontrol et
       if (tkgmState.hasLocationButtonPressed &&
-          (tkgmState.status == TkgmStatus.locationServiceDisabled || 
-           tkgmState.status == TkgmStatus.permissionDenied || 
-           tkgmState.status == TkgmStatus.permissionPermanentlyDenied)) {
-        
+          (tkgmState.status == TkgmStatus.locationServiceDisabled || tkgmState.status == TkgmStatus.permissionDenied || tkgmState.status == TkgmStatus.permissionPermanentlyDenied)) {
         // Kısa bir delay ile konum durumunu yeniden kontrol et (settings'den dönüş için)
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
@@ -148,8 +145,16 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
                   onPressed: () {
                     context.read<TkgmBloc>().add(const LoadLocationEvent());
                   },
-                  icon: const Icon(Icons.my_location),
-                  label: const Text('Konumu Al'),
+                  icon: const Icon(
+                    Icons.my_location,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'Konumu Al',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
                   backgroundColor: Theme.of(context).primaryColor,
                 )
               : const SizedBox.shrink();

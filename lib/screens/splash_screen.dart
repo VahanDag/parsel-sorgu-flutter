@@ -91,77 +91,95 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         ),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo animasyonu
-              AnimatedBuilder(
-                animation: _logoController,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _logoScaleAnimation.value,
-                    child: Opacity(
-                      opacity: _logoOpacityAnimation.value,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade600,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [BoxShadow(color: Colors.blue.shade200, blurRadius: 20, spreadRadius: 5)],
-                        ),
-                        child: // Icon yerine Image.asset kullanın
-                        Image.asset(
-                          'assets/icon/icon.png',
-                          width: 80,
-                          height: 80,
-                        ),
-                      ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo animasyonu
+                    AnimatedBuilder(
+                      animation: _logoController,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _logoScaleAnimation.value,
+                          child: Opacity(
+                            opacity: _logoOpacityAnimation.value,
+                            child: Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade600,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [BoxShadow(color: Colors.blue.shade200, blurRadius: 20, spreadRadius: 5)],
+                              ),
+                              child: // Icon yerine Image.asset kullanın
+                                  ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(
+                                  'assets/icon/icon.png',
+                                  width: 80,
+                                  height: 80,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+
+                    const SizedBox(height: 40),
+
+                    // Uygulama adı animasyonu
+                    AnimatedBuilder(
+                      animation: _textController,
+                      builder: (context, child) {
+                        return SlideTransition(
+                          position: _textSlideAnimation,
+                          child: FadeTransition(
+                            opacity: _textOpacityAnimation,
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Parsel Sorgulama',
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue.shade800, letterSpacing: 1.2),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Gayrimenkul bilgilerinizi kolayca sorgulayın',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    // Loading indicator
+                    AnimatedBuilder(
+                      animation: _textController,
+                      builder: (context, child) {
+                        return FadeTransition(
+                          opacity: _textOpacityAnimation,
+                          child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600), strokeWidth: 3),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 40),
-
-              // Uygulama adı animasyonu
-              AnimatedBuilder(
-                animation: _textController,
-                builder: (context, child) {
-                  return SlideTransition(
-                    position: _textSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _textOpacityAnimation,
-                      child: Column(
-                        children: [
-                          Text(
-                            'Parsel Sorgulama',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue.shade800, letterSpacing: 1.2),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Gayrimenkul bilgilerinizi kolayca sorgulayın',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 60),
-
-              // Loading indicator
-              AnimatedBuilder(
-                animation: _textController,
-                builder: (context, child) {
-                  return FadeTransition(
-                    opacity: _textOpacityAnimation,
-                    child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600), strokeWidth: 3),
-                  );
-                },
+              // Name at the bottom
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Vahan Dağ',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800, fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
