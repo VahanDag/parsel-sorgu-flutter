@@ -57,7 +57,6 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
   }
 
   void _showMessage(String message, {bool isError = false}) {
-    print(message);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: isError ? Colors.red : Colors.green, behavior: SnackBarBehavior.floating));
   }
 

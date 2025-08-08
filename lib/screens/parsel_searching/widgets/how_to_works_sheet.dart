@@ -167,9 +167,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
                 decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)),
                 child: Icon(icon, color: iconColor, size: 24),
               ),
-
               SizedBox(width: 16),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,9 +182,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
               ),
             ],
           ),
-
           SizedBox(height: 16),
-
           ...steps.asMap().entries.map((entry) {
             final index = entry.key;
             final step = entry.value;
@@ -208,9 +204,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
                       ),
                     ),
                   ),
-
                   SizedBox(width: 12),
-
                   Expanded(
                     child: Text(step, style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.4)),
                   ),
@@ -237,9 +231,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
           'Özellikler',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey[800]),
         ),
-
         SizedBox(height: 16),
-
         ...features.map((feature) {
           return Container(
             margin: EdgeInsets.only(bottom: 16),
@@ -257,9 +249,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
                   decoration: BoxDecoration(color: (feature['color'] as Color).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
                   child: Icon(feature['icon'] as IconData, color: feature['color'] as Color, size: 20),
                 ),
-
                 SizedBox(width: 16),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,9 +258,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
                         feature['title'] as String,
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[800]),
                       ),
-
                       SizedBox(height: 4),
-
                       Text(feature['description'] as String, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                     ],
                   ),
@@ -304,9 +292,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
               ),
             ],
           ),
-
           SizedBox(height: 16),
-
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -322,7 +308,6 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
                     style: TextStyle(fontSize: 14, color: Colors.grey[600], fontFamily: 'monospace'),
                   ),
                 ),
-
                 GestureDetector(
                   onTap: () {
                     // Örnek linki text field'a yapıştır
@@ -339,9 +324,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
               ],
             ),
           ),
-
           SizedBox(height: 12),
-
           Text('Bu örnek linki kullanarak uygulamayı test edebilirsiniz', style: TextStyle(fontSize: 13, color: Colors.orange[700])),
         ],
       ),

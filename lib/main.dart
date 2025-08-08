@@ -1,13 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_bloc.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_bloc.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_event.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
-import 'package:parsel_sorgu/core/url_expander.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/parsel_searching_screen.dart';
 import 'package:parsel_sorgu/screens/splash_screen.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+
+part 'screens/widgets/invalid_url_error_sheet.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,72 +22,29 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String? sharedUrl;
-  late StreamSubscription _intentSub;
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  late SharedUrlBloc sharedUrlBloc;
 
-  @override
-  void initState() {
-    super.initState();
-    _initShareHandling();
-  }
-
-  // Paylaşım olaylarını yönetmek için birleşik bir fonksiyon
-  Future<void> _initShareHandling() async {
-    // 1. Uygulama açıkken gelen yeni paylaşımları dinle
-    _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen((List<SharedMediaFile> value) {
-      if (value.isNotEmpty) {
-        _handleSharedMedia(value.first);
-      }
-    }, onError: (error) {
-      print("getMediaStream error: $error");
-    });
-
-    // 2. Uygulama kapalıyken gelen ilk paylaşımı yakala
-    try {
-      final List<SharedMediaFile> initialMedia = await ReceiveSharingIntent.instance.getInitialMedia();
-
-      if (initialMedia.isNotEmpty) {
-        _handleSharedMedia(initialMedia.first);
-        // Kütüphaneye intent'in işlendiğini bildir
-        ReceiveSharingIntent.instance.reset();
-      }
-    } catch (e) {
-      print("getInitialMedia error: $e");
+  void _showInvalidUrlModal() {
+    final BuildContext? context = navigatorKey.currentContext;
+    if (context != null && !Navigator.canPop(context)) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (timeStamp) {
+          showInvalidUrlBottomSheet(context: context, sharedUrlBloc: sharedUrlBloc);
+        },
+      );
     }
-  }
-
-  // Gelen paylaşım verisini işleyen ve arayüzü güncelleyen fonksiyon
-  void _handleSharedMedia(SharedMediaFile media) async {
-    // SharedMediaFile'dan path'i al (URL metinleri için path kullanılır)
-    final content = media.path;
-
-    if (content.contains('sahibinden.com') || content.contains('shbd.io')) {
-      String finalUrl = content;
-
-      // Kısaltılmış URL ise genişlet
-      if (content.contains('shbd.io')) {
-        final expandedUrl = await UrlExpander.expandUrl(content);
-        if (expandedUrl != null) {
-          finalUrl = expandedUrl;
-        }
-      }
-
-      setState(() {
-        sharedUrl = finalUrl;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _intentSub.cancel();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    sharedUrlBloc = SharedUrlBloc(onInvalidUrl: _showInvalidUrlModal);
+
     return MultiBlocProvider(
       providers: [
+        BlocProvider<SharedUrlBloc>(
+          create: (context) => sharedUrlBloc..add(const InitializeSharedUrl()),
+        ),
         BlocProvider<ParselSearchingBloc>(
           create: (context) => ParselSearchingBloc(),
         ),
@@ -95,6 +53,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ],
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Parsel Sorgulama',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
@@ -108,13 +67,39 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        // Ana ekran olarak splash ekranını göster
-        home: SplashScreen(
-          sharedUrl: sharedUrl,
-          nextScreen: ParselSearchScreen(sharedUrl: sharedUrl),
-        ),
+        // Ana ekran
+        home: const AppHome(),
         debugShowCheckedModeBanner: false, // Debug banner'ını kaldır
       ),
+    );
+  }
+}
+
+class AppHome extends StatefulWidget {
+  const AppHome({super.key});
+
+  @override
+  State<AppHome> createState() => _AppHomeState();
+}
+
+class _AppHomeState extends State<AppHome> {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SharedUrlBloc, SharedUrlState>(
+      builder: (context, state) {
+        print("BlocBuilder: Building with state ${state.runtimeType}");
+        String? sharedUrl;
+
+        if (state is SharedUrlReceived) {
+          sharedUrl = state.url;
+          print("BlocBuilder: SharedUrl = $sharedUrl");
+        }
+
+        return SplashScreen(
+          sharedUrl: sharedUrl,
+          nextScreen: ParselSearchScreen(sharedUrl: sharedUrl),
+        );
+      },
     );
   }
 }
