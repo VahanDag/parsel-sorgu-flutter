@@ -9,6 +9,11 @@ enum ParselSearchingStatus {
   error,
 }
 
+enum SearchMode {
+  webView,
+  manual,
+}
+
 class ParselSearchingState extends Equatable {
   final String url;
   final ParselSearchingStatus status;
@@ -18,6 +23,7 @@ class ParselSearchingState extends Equatable {
   final bool showWebView;
   final bool isWebViewReady;
   final String? errorMessage;
+  final SearchMode searchMode;
 
   const ParselSearchingState({
     this.url = '',
@@ -28,6 +34,7 @@ class ParselSearchingState extends Equatable {
     this.showWebView = true,
     this.isWebViewReady = false,
     this.errorMessage,
+    this.searchMode = SearchMode.webView,
   });
 
   bool get isValidUrl => url.isNotEmpty && (url.contains('sahibinden.com') || url.contains('shbd.io'));
@@ -45,6 +52,7 @@ class ParselSearchingState extends Equatable {
     bool? showWebView,
     bool? isWebViewReady,
     String? errorMessage,
+    SearchMode? searchMode,
   }) {
     return ParselSearchingState(
       url: url ?? this.url,
@@ -55,6 +63,7 @@ class ParselSearchingState extends Equatable {
       showWebView: showWebView ?? this.showWebView,
       isWebViewReady: isWebViewReady ?? this.isWebViewReady,
       errorMessage: errorMessage ?? this.errorMessage,
+      searchMode: searchMode ?? this.searchMode,
     );
   }
 
@@ -68,5 +77,6 @@ class ParselSearchingState extends Equatable {
         showWebView,
         isWebViewReady,
         errorMessage,
+        searchMode,
       ];
 }

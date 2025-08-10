@@ -76,3 +76,26 @@ class SetInitialUrlEvent extends ParselSearchingEvent {
   @override
   List<Object?> get props => [url];
 }
+
+class ToggleSearchModeEvent extends ParselSearchingEvent {
+  const ToggleSearchModeEvent();
+}
+
+class ManualSearchEvent extends ParselSearchingEvent {
+  final String province;
+  final String district;
+  final String neighborhood;
+  final String adaNo;
+  final String parselNo;
+
+  const ManualSearchEvent({
+    required this.province,
+    required this.district,
+    required this.neighborhood,
+    required this.adaNo,
+    required this.parselNo,
+  });
+
+  @override
+  List<Object?> get props => [province, district, neighborhood, adaNo, parselNo];
+}

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:http/http.dart' as http;
+
 import 'parsel_searching_event.dart';
 import 'parsel_searching_state.dart';
 
@@ -21,6 +23,8 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
     on<WebViewLoadErrorEvent>(_onWebViewLoadError);
     on<ToggleWebViewVisibilityEvent>(_onToggleWebViewVisibility);
     on<SetInitialUrlEvent>(_onSetInitialUrl);
+    on<ToggleSearchModeEvent>(_onToggleSearchMode);
+    on<ManualSearchEvent>(_onManualSearch);
   }
 
   @override
@@ -175,12 +179,16 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       );
 
       final ilData = json.decode(ilResponse.body);
+      if (ilData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
+
       int? ilId;
 
       for (var feature in ilData['features']) {
-        if (feature['properties']['text'].toString().toLowerCase() ==
-            data['il'].toString().toLowerCase()) {
-          ilId = feature['properties']['id'];
+        print("${feature['properties']['text'].toString().toLowerCase()} ${data['il'].toString().toLowerCase()}");
+        if (feature['properties']['text'].toString().toLowerCase() == data['il'].toString().toLowerCase()) {
+          print(feature['properties']['id'].toString().runtimeType);
+          ilId = int.tryParse(feature['properties']['id'].toString());
+          print("bitti il $ilId");
           break;
         }
       }
@@ -196,14 +204,18 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
           'Referer': 'https://parselsorgu.tkgm.gov.tr/',
         },
       );
+      print("veri çekildi ilce");
 
       final ilceData = json.decode(ilceResponse.body);
+      if (ilceData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
+
       int? ilceId;
 
       for (var feature in ilceData['features']) {
-        if (feature['properties']['text'].toString().toLowerCase() ==
-            data['ilce'].toString().toLowerCase()) {
-          ilceId = feature['properties']['id'];
+        print("${feature['properties']['text'].toString().toLowerCase()} ${data['ilce'].toString().toLowerCase()}");
+        if (feature['properties']['text'].toString().toLowerCase() == data['ilce'].toString().toLowerCase()) {
+          ilceId = int.tryParse(feature['properties']['id'].toString());
+          print("bitti ilce $ilceId");
           break;
         }
       }
@@ -219,20 +231,21 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
           'Referer': 'https://parselsorgu.tkgm.gov.tr/',
         },
       );
-
+      print("veri çekildi mahalle");
       final mahalleData = json.decode(mahalleResponse.body);
-      String? mahalleId;
+      if (mahalleData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
 
-      final cleanMahalleName = data['mahalle']
-          .toString()
-          .replaceAll(' Mh.', '')
-          .replaceAll(' Mah.', '')
-          .toLowerCase();
+      int? mahalleId;
+
+      final cleanMahalleName = data['mahalle'].toString().replaceAll(' Mh.', '').replaceAll(' Mah.', '').toLowerCase();
 
       for (var feature in mahalleData['features']) {
         final mahalleName = feature['properties']['text'].toString().toLowerCase();
         if (mahalleName == cleanMahalleName || mahalleName.contains(cleanMahalleName)) {
-          mahalleId = feature['properties']['id'].toString();
+          print(feature['properties']['id'].toString());
+          mahalleId = int.tryParse(feature['properties']['id'].toString());
+          print("bitti mahalleId $mahalleId");
+
           break;
         }
       }
@@ -251,10 +264,11 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         parselData: {...data, 'tkgmUrl': tkgmUrl},
       ));
     } catch (e) {
+      print(e.toString());
       emit(state.copyWith(
         status: ParselSearchingStatus.error,
         errorMessage: 'Konum bilgileri alınamadı: ${e.toString()}',
-        statusMessage: 'TKGM sorgu hatası',
+        statusMessage: 'TKGM sorgu hatası ${e.toString().contains("limit") ? ': Günlük sorgu limitini aştınız' : ''}',
       ));
     }
   }
@@ -296,5 +310,42 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
     if (event.url != null && event.url!.isNotEmpty) {
       emit(state.copyWith(url: event.url!));
     }
+  }
+
+  void _onToggleSearchMode(ToggleSearchModeEvent event, Emitter<ParselSearchingState> emit) {
+    final newMode = state.searchMode == SearchMode.webView ? SearchMode.manual : SearchMode.webView;
+    emit(state.copyWith(
+      searchMode: newMode,
+      currentStep: 0,
+      parselData: null,
+      statusMessage: '',
+      status: ParselSearchingStatus.initial,
+      errorMessage: null,
+    ));
+  }
+
+  void _onManualSearch(ManualSearchEvent event, Emitter<ParselSearchingState> emit) async {
+    emit(state.copyWith(
+      status: ParselSearchingStatus.extracting,
+      statusMessage: 'Manuel sorgu hazırlanıyor...',
+      currentStep: 2,
+    ));
+
+    final parselData = {
+      'il': event.province,
+      'ilce': event.district,
+      'mahalle': event.neighborhood,
+      'adaNo': event.adaNo,
+      'parselNo': event.parselNo,
+    };
+
+    emit(state.copyWith(
+      parselData: parselData,
+      status: ParselSearchingStatus.extracted,
+      statusMessage: 'Manuel veriler alındı, TKGM\'ye yönlendiriliyor...',
+    ));
+
+    // TKGM ID'lerini bul ve yönlendir
+    await _findMahalleIdAndRedirect(parselData, emit);
   }
 }
