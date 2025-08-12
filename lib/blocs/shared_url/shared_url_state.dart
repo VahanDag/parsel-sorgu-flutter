@@ -20,11 +20,12 @@ class SharedUrlProcessing extends SharedUrlState {
 // Geçerli URL alındı
 class SharedUrlReceived extends SharedUrlState {
   final String url;
+  final DateTime? timestamp; // Her emit'in farklı olması için timestamp ekle
 
-  const SharedUrlReceived(this.url);
+  const SharedUrlReceived(this.url, {this.timestamp});
 
   @override
-  List<Object?> get props => [url];
+  List<Object?> get props => [url, timestamp];
 }
 
 // Geçersiz URL - modal gösterilmeli

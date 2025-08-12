@@ -25,6 +25,13 @@ class _MyAppState extends State<MyApp> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   late SharedUrlBloc sharedUrlBloc;
 
+  @override
+  void initState() {
+    super.initState();
+    // SharedUrlBloc'u bir kez oluştur
+    sharedUrlBloc = SharedUrlBloc(onInvalidUrl: _showInvalidUrlModal);
+  }
+
   void _showInvalidUrlModal() {
     final BuildContext? context = navigatorKey.currentContext;
     if (context != null && !Navigator.canPop(context)) {
@@ -37,13 +44,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    sharedUrlBloc = SharedUrlBloc(onInvalidUrl: _showInvalidUrlModal);
+  void dispose() {
+    sharedUrlBloc.close();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<SharedUrlBloc>(
-          create: (context) => sharedUrlBloc..add(const InitializeSharedUrl()),
+        BlocProvider<SharedUrlBloc>.value(
+          value: sharedUrlBloc..add(const InitializeSharedUrl()),
         ),
         BlocProvider<ParselSearchingBloc>(
           create: (context) => ParselSearchingBloc(),
@@ -58,7 +69,10 @@ class _MyAppState extends State<MyApp> {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,
-          cardTheme: CardThemeData(elevation: 4, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+          cardTheme: CardTheme(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -67,37 +81,47 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        // Ana ekran
         home: const AppHome(),
-        debugShowCheckedModeBanner: false, // Debug banner'ını kaldır
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
 }
 
-class AppHome extends StatefulWidget {
+class AppHome extends StatelessWidget {
   const AppHome({super.key});
 
   @override
-  State<AppHome> createState() => _AppHomeState();
-}
-
-class _AppHomeState extends State<AppHome> {
-  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SharedUrlBloc, SharedUrlState>(
+    return BlocConsumer<SharedUrlBloc, SharedUrlState>(
+      // listener kullanarak state değişikliklerini yakalayabiliriz
+      listener: (context, state) {
+        print("BlocConsumer: State changed to ${state.runtimeType}");
+        if (state is SharedUrlReceived) {
+          print("BlocConsumer: SharedUrl received = ${state.url}");
+          // Gerekirse burada navigation veya diğer işlemler yapılabilir
+        }
+      },
+      // buildWhen ile gereksiz rebuild'leri önleyebiliriz
+      buildWhen: (previous, current) {
+        // Her zaman rebuild et (test amaçlı)
+        print("BlocConsumer: Previous state: ${previous.runtimeType}, Current state: ${current.runtimeType}");
+        return true;
+      },
       builder: (context, state) {
-        print("BlocBuilder: Building with state ${state.runtimeType}");
+        print("BlocConsumer: Building with state ${state.runtimeType}");
         String? sharedUrl;
 
         if (state is SharedUrlReceived) {
           sharedUrl = state.url;
-          print("BlocBuilder: SharedUrl = $sharedUrl");
+          print("BlocConsumer: SharedUrl in builder = $sharedUrl");
         }
 
         return SplashScreen(
           sharedUrl: sharedUrl,
-          nextScreen: ParselSearchScreen(sharedUrl: sharedUrl),
+          nextScreen: ParselSearchScreen(
+            sharedUrl: sharedUrl,
+          ),
         );
       },
     );

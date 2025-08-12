@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>AppGroupId</key>
+		<string>$(CUSTOM_GROUP_ID)</string>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true />
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -20,9 +24,22 @@
 		<string>$(FLUTTER_BUILD_NAME)</string>
 		<key>CFBundleSignature</key>
 		<string>????</string>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+				</array>
+			</dict>
+		</array>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
+		<true />
+		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
@@ -41,26 +58,31 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
-		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true />
-		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true />
 
-		<!-- receive_sharing_intent paketi için eklenen konfigürasyonlar -->
-		<key>AppGroupId</key>
-		<string>$(CUSTOM_GROUP_ID)</string>
-		<key>CFBundleURLTypes</key>
+		<!-- Location Permission -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Parsel ile aranızdaki mesafeyi ölçmemiz için konum izninize ihtiyacımız var.</string>
+
+		<!-- App Transport Security Settings -->
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<true />
+			<key>NSAllowsArbitraryLoadsInWebContent</key>
+			<true />
+			<key>NSAllowsLocalNetworking</key>
+			<true />
+		</dict>
+
+		<!-- IMPORTANT: COMPLETELY REMOVE WKAppBoundDomains -->
+		<!-- Do NOT include WKAppBoundDomains at all -->
+		<!-- This restriction causes JavaScript execution issues -->
+
+		<!-- User Activity Types -->
+		<key>NSUserActivityTypes</key>
 		<array>
-			<dict>
-				<key>CFBundleTypeRole</key>
-				<string>Editor</string>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-				</array>
-			</dict>
+			<string>NSUserActivityTypeBrowsingWeb</string>
 		</array>
-		<key>NSPhotoLibraryUsageDescription</key>
-		<string>To upload photos, please allow permission to access your photo library.</string>
+
 	</dict>
 </plist>

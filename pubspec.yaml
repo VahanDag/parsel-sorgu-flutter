@@ -14,10 +14,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.4.0
   html: ^0.15.6
-  # webview_flutter: ^4.13.0
-  # share_handler: ^0.0.23
   url_launcher: ^6.3.2
-  flutter_inappwebview: ^6.0.0
+  flutter_inappwebview: ^6.1.4
   geolocator: ^13.0.0
   receive_sharing_intent: ^1.8.1
   flutter_bloc: ^8.1.6

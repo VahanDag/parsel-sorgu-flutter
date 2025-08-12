@@ -19,6 +19,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   late Animation<double> _logoOpacityAnimation;
   late Animation<double> _textOpacityAnimation;
   late Animation<Offset> _textSlideAnimation;
+  Timer? _textAnimationTimer;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -53,13 +55,15 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _logoController.forward();
 
     // Logo animasyonu tamamlandıktan sonra metin animasyonunu başlat
-    Timer(const Duration(milliseconds: 800), () {
-      _textController.forward();
+    _textAnimationTimer = Timer(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        _textController.forward();
+      }
     });
   }
 
   void _navigateToHome() {
-    Timer(const Duration(milliseconds: 3000), () {
+    _navigationTimer = Timer(const Duration(milliseconds: 3000), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -76,6 +80,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
+    _textAnimationTimer?.cancel();
+    _navigationTimer?.cancel();
     _logoController.dispose();
     _textController.dispose();
     super.dispose();

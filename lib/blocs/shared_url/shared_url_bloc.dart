@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_event.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
@@ -9,6 +10,7 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
   late StreamSubscription _intentSubscription;
   Function()? onInvalidUrl;
   bool _modalShown = false;
+  String? _lastProcessedUrl; // Son işlenen URL'i takip et
 
   SharedUrlBloc({this.onInvalidUrl}) : super(const SharedUrlInitial()) {
     on<InitializeSharedUrl>(_onInitializeSharedUrl);
@@ -23,18 +25,27 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
 
   void _initializeSharedIntentListening() {
     print("SharedUrlBloc: Initializing shared intent listening");
+
     // Uygulama açıkken gelen yeni paylaşımları dinle
     _intentSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
       (List<SharedMediaFile> value) {
         print("SharedUrlBloc: Received media stream: ${value.length} items");
         if (value.isNotEmpty) {
-          print("SharedUrlBloc: Processing first media item: ${value.first.path}");
-          add(SharedMediaReceived(value.first));
+          final path = value.first.path;
+          print("SharedUrlBloc: Processing first media item: $path");
+
+          // Duplicate kontrolü - aynı URL tekrar geliyorsa işleme
+          if (_lastProcessedUrl != path) {
+            _lastProcessedUrl = path;
+            add(SharedMediaReceived(value.first));
+          } else {
+            print("SharedUrlBloc: Duplicate URL detected, skipping: $path");
+          }
         }
       },
       onError: (error) {
         print("SharedUrlBloc: Error in media stream: $error");
-        add(const ShowInvalidUrlModal()); // Hata durumunda invalid URL modal'ı göster
+        add(const ShowInvalidUrlModal());
       },
     );
   }
@@ -46,14 +57,15 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
     try {
       print("SharedUrlBloc: Initializing shared URL");
       emit(const SharedUrlProcessing());
-      
+
       // Uygulama kapalıyken gelen ilk paylaşımı yakala
-      final List<SharedMediaFile> initialMedia = 
-          await ReceiveSharingIntent.instance.getInitialMedia();
+      final List<SharedMediaFile> initialMedia = await ReceiveSharingIntent.instance.getInitialMedia();
 
       print("SharedUrlBloc: Initial media count: ${initialMedia.length}");
       if (initialMedia.isNotEmpty) {
-        print("SharedUrlBloc: Processing initial media: ${initialMedia.first.path}");
+        final path = initialMedia.first.path;
+        print("SharedUrlBloc: Processing initial media: $path");
+        _lastProcessedUrl = path; // URL'i kaydet
         await _processSharedMedia(initialMedia.first, emit);
         // Intent'i temizle
         ReceiveSharingIntent.instance.reset();
@@ -72,7 +84,13 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
     Emitter<SharedUrlState> emit,
   ) async {
     print("SharedUrlBloc: Shared media received: ${event.media.path}");
+
+    // Processing state'i emit et
     emit(const SharedUrlProcessing());
+
+    // Küçük bir gecikme ekle (UI'nin processing state'ini görmesi için)
+    await Future.delayed(const Duration(milliseconds: 50));
+
     await _processSharedMedia(event.media, emit);
   }
 
@@ -98,13 +116,18 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
           }
         }
 
-        print("SharedUrlBloc: Emitting SharedUrlReceived");
-        emit(SharedUrlReceived(finalUrl));
+        print("SharedUrlBloc: Emitting SharedUrlReceived with URL: $finalUrl");
+
+        // Timestamp ekleyerek her zaman farklı bir state olmasını sağla
+        emit(SharedUrlReceived(finalUrl, timestamp: DateTime.now()));
+
+        // State'in başarıyla emit edildiğini kontrol et
+        print("SharedUrlBloc: Current state after emit: ${state.runtimeType}");
       } else {
         print("SharedUrlBloc: Invalid URL - emitting SharedUrlInvalid");
         // Geçersiz URL - modal göster
         emit(const SharedUrlInvalid());
-        
+
         // Callback varsa ve modal henüz gösterilmemişse çağır
         if (onInvalidUrl != null && !_modalShown) {
           print("SharedUrlBloc: Calling onInvalidUrl callback");
@@ -137,6 +160,7 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
     ClearSharedUrl event,
     Emitter<SharedUrlState> emit,
   ) {
+    _lastProcessedUrl = null; // URL'i temizle
     emit(const SharedUrlInitial());
   }
 

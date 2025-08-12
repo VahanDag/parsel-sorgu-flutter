@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:math' as math;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+
 import 'tkgm_event.dart';
 import 'tkgm_state.dart';
 
@@ -81,9 +83,10 @@ class TkgmBloc extends Bloc<TkgmEvent, TkgmState> {
 
       add(const FetchParselDataEvent());
     } catch (e) {
+      print(e.toString());
       emit(state.copyWith(
         status: TkgmStatus.error,
-        errorMessage: 'Konum alınamadı: ${e.toString()}',
+        errorMessage: 'Konum alınamadı}',
       ));
     }
   }
@@ -207,8 +210,7 @@ class TkgmBloc extends Bloc<TkgmEvent, TkgmState> {
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
 
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) + math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
 
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
@@ -251,21 +253,10 @@ class TkgmBloc extends Bloc<TkgmEvent, TkgmState> {
     }
 
     // 4. Türkiye özel durumları
-    const turkeyBounds = {
-      'minLat': 35.8,
-      'maxLat': 42.1,
-      'minLon': 25.7,
-      'maxLon': 44.8
-    };
+    const turkeyBounds = {'minLat': 35.8, 'maxLat': 42.1, 'minLon': 25.7, 'maxLon': 44.8};
 
-    final point1InTurkey = (lat1 >= turkeyBounds['minLat']! &&
-        lat1 <= turkeyBounds['maxLat']! &&
-        lon1 >= turkeyBounds['minLon']! &&
-        lon1 <= turkeyBounds['maxLon']!);
-    final point2InTurkey = (lat2 >= turkeyBounds['minLat']! &&
-        lat2 <= turkeyBounds['maxLat']! &&
-        lon2 >= turkeyBounds['minLon']! &&
-        lon2 <= turkeyBounds['maxLon']!);
+    final point1InTurkey = (lat1 >= turkeyBounds['minLat']! && lat1 <= turkeyBounds['maxLat']! && lon1 >= turkeyBounds['minLon']! && lon1 <= turkeyBounds['maxLon']!);
+    final point2InTurkey = (lat2 >= turkeyBounds['minLat']! && lat2 <= turkeyBounds['maxLat']! && lon2 >= turkeyBounds['minLon']! && lon2 <= turkeyBounds['maxLon']!);
 
     if (point1InTurkey && point2InTurkey) {
       // Türkiye içi özel durumlar
@@ -303,8 +294,7 @@ class TkgmBloc extends Bloc<TkgmEvent, TkgmState> {
     final deltaPhi = (lat2 - lat1) * math.pi / 180;
     final deltaLambda = (lon2 - lon1) * math.pi / 180;
 
-    final a = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
-        math.cos(phi1) * math.cos(phi2) * math.sin(deltaLambda / 2) * math.sin(deltaLambda / 2);
+    final a = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) + math.cos(phi1) * math.cos(phi2) * math.sin(deltaLambda / 2) * math.sin(deltaLambda / 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
     return R * c; // metre cinsinden mesafe

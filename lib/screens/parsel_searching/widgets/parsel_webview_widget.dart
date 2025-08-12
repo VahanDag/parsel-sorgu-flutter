@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
@@ -31,10 +33,7 @@ class ParselWebViewWidget extends StatelessWidget {
     return Column(
       children: [
         if (isLoading) const LinearProgressIndicator(),
-        Visibility(
-          visible: showWebView,
-          maintainState: true,
-          child: Container(
+        if (showWebView) Container(
             height: 500,
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -50,16 +49,50 @@ class ParselWebViewWidget extends StatelessWidget {
             ),
             clipBehavior: Clip.antiAlias,
             child: InAppWebView(
-              key: const ValueKey('webview'),
               initialSettings: InAppWebViewSettings(
+                // CRITICAL: JavaScript must be enabled
                 javaScriptEnabled: true,
+
+                // CRITICAL FOR iOS: Disable App-Bound Domains restriction
+                // This is the key setting that fixes the JavaScript execution issue
+                limitsNavigationsToAppBoundDomains: false,
+
+                // iOS specific settings
+                allowsInlineMediaPlayback: true,
+                allowsBackForwardNavigationGestures: true,
+                allowsAirPlayForMediaPlayback: false,
+                allowsPictureInPictureMediaPlayback: false,
+                iframeAllowFullscreen: true,
+                applePayAPIEnabled: false,
+
+                // iOS WKWebView settings for JavaScript
+                javaScriptCanOpenWindowsAutomatically: true,
+
+                // Android specific settings
+                domStorageEnabled: Platform.isAndroid,
+                databaseEnabled: Platform.isAndroid,
+
+                // Common settings
                 useShouldOverrideUrlLoading: true,
+                mediaPlaybackRequiresUserGesture: false,
                 supportZoom: true,
-                builtInZoomControls: true,
+                builtInZoomControls: false,
                 displayZoomControls: false,
                 useWideViewPort: true,
                 loadWithOverviewMode: true,
+
+                // Cache and cookie settings
+                cacheEnabled: true,
+                clearCache: false,
+
+                // Security settings
+                mixedContentMode: Platform.isAndroid ? MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW : null,
+
+                // User agent for better compatibility
+                userAgent:
+                    Platform.isIOS ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1' : null,
               ),
+
               onWebViewCreated: onWebViewCreated,
               onLoadStart: onLoadStart,
               onProgressChanged: onProgressChanged,
@@ -67,9 +100,13 @@ class ParselWebViewWidget extends StatelessWidget {
               onReceivedError: onReceivedError,
               onReceivedHttpError: onReceivedHttpError,
               shouldOverrideUrlLoading: shouldOverrideUrlLoading,
+
+              // Console logging for debugging
+              onConsoleMessage: (controller, consoleMessage) {
+                print('Console: ${consoleMessage.message}');
+              },
             ),
           ),
-        ),
       ],
     );
   }

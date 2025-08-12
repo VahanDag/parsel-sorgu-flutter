@@ -247,11 +247,11 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                         print('WebView oluşturuldu');
 
                         // WebView hazır olduğunda otomatik yükleme yap
-                        if (_shouldAutoLoad && widget.sharedUrl != null) {
+                        if (_shouldAutoLoad && state.url.isNotEmpty) {
                           _shouldAutoLoad = false;
                           Future.delayed(const Duration(milliseconds: 500), () {
                             if (mounted) {
-                              context.read<ParselSearchingBloc>().add(LoadUrlEvent(widget.sharedUrl!));
+                              context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
                             }
                           });
                         }

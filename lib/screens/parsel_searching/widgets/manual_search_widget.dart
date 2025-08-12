@@ -12,23 +12,20 @@ class ManualSearchWidget extends StatefulWidget {
 }
 
 class _ManualSearchWidgetState extends State<ManualSearchWidget> {
-  final TextEditingController _provinceController = TextEditingController();
-  final TextEditingController _districtController = TextEditingController();
-  final TextEditingController _neighborhoodController = TextEditingController();
   final TextEditingController _adaNoController = TextEditingController();
   final TextEditingController _parselNoController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   String? _selectedProvince;
   String? _selectedDistrict;
   String? _selectedNeighborhood;
+  List<String> _filteredItems = [];
 
   @override
   void dispose() {
-    _provinceController.dispose();
-    _districtController.dispose();
-    _neighborhoodController.dispose();
     _adaNoController.dispose();
     _parselNoController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -45,9 +42,6 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
       _selectedProvince = province;
       _selectedDistrict = null;
       _selectedNeighborhood = null;
-      _provinceController.text = province;
-      _districtController.clear();
-      _neighborhoodController.clear();
     });
   }
 
@@ -55,15 +49,12 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
     setState(() {
       _selectedDistrict = district;
       _selectedNeighborhood = null;
-      _districtController.text = district;
-      _neighborhoodController.clear();
     });
   }
 
   void _onNeighborhoodSelected(String neighborhood) {
     setState(() {
       _selectedNeighborhood = neighborhood;
-      _neighborhoodController.text = neighborhood;
     });
   }
 
@@ -100,37 +91,54 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
             const SizedBox(height: 16),
 
             // Province Selection
-            SearchableDropdownField(
-              controller: _provinceController,
+            _buildSelectionField(
               label: 'İl',
-              items: LocationConstants.getProvinces(),
-              searchFunction: LocationConstants.searchProvinces,
-              onSelected: _onProvinceSelected,
-              enabled: true,
+              value: _selectedProvince,
+              onTap: () => _showBottomSheet(
+                title: 'İl Seçiniz',
+                items: LocationConstants.getProvinces(),
+                searchFunction: LocationConstants.searchProvinces,
+                onSelected: _onProvinceSelected,
+                selectedValue: _selectedProvince,
+              ),
             ),
             const SizedBox(height: 12),
 
             // District Selection
-            SearchableDropdownField(
-              controller: _districtController,
+            _buildSelectionField(
               label: 'İlçe',
-              items: _selectedProvince != null ? LocationConstants.getDistricts(_selectedProvince!) : [],
-              searchFunction: _selectedProvince != null ? (query) => LocationConstants.searchDistricts(_selectedProvince!, query) : (query) => <String>[],
-              onSelected: _onDistrictSelected,
+              value: _selectedDistrict,
               enabled: _selectedProvince != null,
+              onTap: _selectedProvince != null
+                  ? () => _showBottomSheet(
+                        title: 'İlçe Seçiniz',
+                        items: LocationConstants.getDistricts(_selectedProvince!),
+                        searchFunction: (query) => LocationConstants.searchDistricts(_selectedProvince!, query),
+                        onSelected: _onDistrictSelected,
+                        selectedValue: _selectedDistrict,
+                      )
+                  : null,
             ),
             const SizedBox(height: 12),
 
             // Neighborhood Selection
-            SearchableDropdownField(
-              controller: _neighborhoodController,
+            _buildSelectionField(
               label: 'Mahalle',
-              items: (_selectedDistrict != null && _selectedProvince != null) ? LocationConstants.getNeighborhoods(_selectedDistrict!, _selectedProvince!) : [],
-              searchFunction: (_selectedDistrict != null && _selectedProvince != null)
-                  ? (query) => LocationConstants.searchNeighborhoods(district: _selectedDistrict!, province: _selectedProvince!, query: query)
-                  : (query) => <String>[],
-              onSelected: _onNeighborhoodSelected,
-              enabled: _selectedDistrict != null,
+              value: _selectedNeighborhood,
+              enabled: _selectedDistrict != null && _selectedProvince != null,
+              onTap: (_selectedDistrict != null && _selectedProvince != null)
+                  ? () => _showBottomSheet(
+                        title: 'Mahalle Seçiniz',
+                        items: LocationConstants.getNeighborhoods(_selectedDistrict!, _selectedProvince!),
+                        searchFunction: (query) => LocationConstants.searchNeighborhoods(
+                          district: _selectedDistrict!,
+                          province: _selectedProvince!,
+                          query: query,
+                        ),
+                        onSelected: _onNeighborhoodSelected,
+                        selectedValue: _selectedNeighborhood,
+                      )
+                  : null,
             ),
             const SizedBox(height: 12),
 
@@ -182,139 +190,188 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
       ),
     );
   }
-}
 
-class SearchableDropdownField extends StatefulWidget {
-  final TextEditingController controller;
-  final String label;
-  final List<String> items;
-  final List<String> Function(String query) searchFunction;
-  final void Function(String) onSelected;
-  final bool enabled;
-
-  const SearchableDropdownField({
-    super.key,
-    required this.controller,
-    required this.label,
-    required this.items,
-    required this.searchFunction,
-    required this.onSelected,
-    required this.enabled,
-  });
-
-  @override
-  State<SearchableDropdownField> createState() => _SearchableDropdownFieldState();
-}
-
-class _SearchableDropdownFieldState extends State<SearchableDropdownField> {
-  final LayerLink _layerLink = LayerLink();
-  OverlayEntry? _overlayEntry;
-  final FocusNode _focusNode = FocusNode();
-  List<String> _filteredItems = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _filteredItems = widget.items;
-    _focusNode.addListener(_onFocusChange);
-    widget.controller.addListener(_onTextChange);
-  }
-
-  @override
-  void didUpdateWidget(SearchableDropdownField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.items != widget.items) {
-      _filteredItems = widget.items;
-      if (_overlayEntry != null) {
-        _overlayEntry!.markNeedsBuild();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    widget.controller.removeListener(_onTextChange);
-    _focusNode.dispose();
-    _removeOverlay();
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    if (_focusNode.hasFocus && widget.enabled) {
-      _showOverlay();
-    } else {
-      _removeOverlay();
-    }
-  }
-
-  void _onTextChange() {
-    if (widget.enabled) {
-      _filteredItems = widget.searchFunction(widget.controller.text);
-      if (_overlayEntry != null) {
-        _overlayEntry!.markNeedsBuild();
-      }
-    }
-  }
-
-  void _showOverlay() {
-    _removeOverlay();
-
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        width: 200,
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          offset: const Offset(0, 60),
-          child: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _filteredItems.length,
-                itemBuilder: (context, index) {
-                  final item = _filteredItems[index];
-                  return ListTile(
-                    title: Text(item),
-                    onTap: () {
-                      widget.onSelected(item);
-                      _removeOverlay();
-                      _focusNode.unfocus();
-                    },
-                  );
-                },
+  Widget _buildSelectionField({
+    required String label,
+    required String? value,
+    bool enabled = true,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: enabled ? Colors.grey.shade400 : Colors.grey.shade300,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: enabled ? Colors.white : Colors.grey.shade50,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: enabled ? Colors.grey.shade600 : Colors.grey.shade400,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value ?? 'Seçiniz',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: value != null
+                          ? (enabled ? Colors.black87 : Colors.grey.shade500)
+                          : Colors.grey.shade500,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: enabled ? Colors.grey.shade600 : Colors.grey.shade400,
+            ),
+          ],
         ),
       ),
     );
-
-    Overlay.of(context).insert(_overlayEntry!);
   }
 
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
+  void _showBottomSheet({
+    required String title,
+    required List<String> items,
+    required List<String> Function(String) searchFunction,
+    required Function(String) onSelected,
+    required String? selectedValue,
+  }) {
+    _searchController.clear();
+    _filteredItems = items;
 
-  @override
-  Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: TextFormField(
-        controller: widget.controller,
-        focusNode: _focusNode,
-        enabled: widget.enabled,
-        decoration: InputDecoration(
-          labelText: widget.label,
-          border: const OutlineInputBorder(),
-          suffixIcon: widget.enabled ? const Icon(Icons.arrow_drop_down) : null,
-        ),
-        readOnly: false,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.9,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Column(
+                  children: [
+                    // Handle
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      height: 4,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Search Field
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Ara...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setModalState(() {
+                            _filteredItems = searchFunction(value);
+                          });
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // List
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          final isSelected = item == selectedValue;
+
+                          return ListTile(
+                            title: Text(
+                              item,
+                              style: TextStyle(
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                color: isSelected ? Theme.of(context).primaryColor : null,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(
+                                    Icons.check,
+                                    color: Colors.green,
+                                    size: 20,
+                                  )
+                                : null,
+                            onTap: () {
+                              onSelected(item);
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

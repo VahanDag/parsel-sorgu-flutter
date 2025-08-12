@@ -100,8 +100,8 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
                       initialUrlRequest: URLRequest(url: WebUri(widget.url)),
                       initialSettings: InAppWebViewSettings(
                         javaScriptEnabled: true,
-                        useShouldOverrideUrlLoading: true,
-                        domStorageEnabled: true,
+                        // useShouldOverrideUrlLoading: true,
+                        // domStorageEnabled: true,
                       ),
                       onWebViewCreated: (controller) {
                         context.read<TkgmBloc>().setWebViewController(controller);
