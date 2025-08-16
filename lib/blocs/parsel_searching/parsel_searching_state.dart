@@ -24,6 +24,7 @@ class ParselSearchingState extends Equatable {
   final bool isWebViewReady;
   final String? errorMessage;
   final SearchMode searchMode;
+  final bool isCloudFlareChallenge;
 
   const ParselSearchingState({
     this.url = '',
@@ -35,13 +36,14 @@ class ParselSearchingState extends Equatable {
     this.isWebViewReady = false,
     this.errorMessage,
     this.searchMode = SearchMode.webView,
+    this.isCloudFlareChallenge = false,
   });
 
   bool get isValidUrl => url.isNotEmpty && (url.contains('sahibinden.com') || url.contains('shbd.io'));
   bool get isLoading => status == ParselSearchingStatus.loading;
   bool get isExtractingData => status == ParselSearchingStatus.extracting;
   bool get canLoadUrl => isValidUrl && !isLoading && !isExtractingData;
-  bool get canExtractData => currentStep >= 1 && !isLoading && !isExtractingData;
+  bool get canExtractData => currentStep >= 1 && !isLoading && !isExtractingData && !isCloudFlareChallenge;
 
   ParselSearchingState copyWith({
     String? url,
@@ -53,6 +55,7 @@ class ParselSearchingState extends Equatable {
     bool? isWebViewReady,
     String? errorMessage,
     SearchMode? searchMode,
+    bool? isCloudFlareChallenge,
   }) {
     return ParselSearchingState(
       url: url ?? this.url,
@@ -64,6 +67,7 @@ class ParselSearchingState extends Equatable {
       isWebViewReady: isWebViewReady ?? this.isWebViewReady,
       errorMessage: errorMessage ?? this.errorMessage,
       searchMode: searchMode ?? this.searchMode,
+      isCloudFlareChallenge: isCloudFlareChallenge ?? this.isCloudFlareChallenge,
     );
   }
 
@@ -78,5 +82,6 @@ class ParselSearchingState extends Equatable {
         isWebViewReady,
         errorMessage,
         searchMode,
+        isCloudFlareChallenge,
       ];
 }

@@ -46,6 +46,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       parselData: null,
       statusMessage: '',
       status: ParselSearchingStatus.initial,
+      isCloudFlareChallenge: false,
     ));
   }
 
@@ -56,6 +57,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       parselData: null,
       statusMessage: '',
       status: ParselSearchingStatus.initial,
+      isCloudFlareChallenge: false,
     ));
   }
 
@@ -73,6 +75,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       statusMessage: 'Sayfa yükleniyor...',
       currentStep: 0,
       parselData: null,
+      isCloudFlareChallenge: false,
     ));
 
     _loadingTimer?.cancel();
@@ -629,51 +632,128 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
   void _onWebViewLoadStop(WebViewLoadStopEvent event, Emitter<ParselSearchingState> emit) async {
     _loadingTimer?.cancel();
 
-    // CloudFlare challenge'ını beklemek için daha uzun süre bekleyelim
+    // Sayfa içeriğinin tam yüklenip yüklenmediğini kontrol et
     emit(state.copyWith(
-      statusMessage: 'CloudFlare koruması kontrol ediliyor...',
+      statusMessage: 'Sayfa içeriği kontrol ediliyor...',
     ));
 
-    // CloudFlare'ın tamamen bypass olmasını bekle
-    await Future.delayed(const Duration(seconds: 3));
+    // Biraz bekle ki sayfa tamamen yüklensin
+    await Future.delayed(const Duration(seconds: 2));
 
-    // Sayfanın gerçekten Sahibinden.com olup olmadığını kontrol et
     try {
       final currentUrl = await _webViewController?.getUrl();
-      if (currentUrl != null && currentUrl.toString().contains('sahibinden.com')) {
-        // Sayfanın title'ını kontrol ederek yüklenme durumunu doğrula
-        final title = await _webViewController!.evaluateJavascript(
-          source: 'document.title',
-        );
-
-        if (title != null && !title.toString().toLowerCase().contains('loading')) {
-          emit(state.copyWith(
-            status: ParselSearchingStatus.loaded,
-            statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
-            currentStep: 1,
-          ));
-        } else {
-          // Hala yükleniyor, biraz daha bekle
-          await Future.delayed(const Duration(seconds: 3));
-          emit(state.copyWith(
-            status: ParselSearchingStatus.loaded,
-            statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
-            currentStep: 1,
-          ));
-        }
-      } else {
+      
+      // Sahibinden.com sayfası değilse direkt geç
+      if (currentUrl == null || !currentUrl.toString().contains('sahibinden.com')) {
         emit(state.copyWith(
           status: ParselSearchingStatus.loaded,
           statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
           currentStep: 1,
+          isCloudFlareChallenge: false,
+        ));
+        return;
+      }
+
+      // Sahibinden.com sayfa içeriğini kontrol et
+      final pageContentCheck = await _webViewController?.evaluateJavascript(
+        source: '''
+        (function() {
+          try {
+            var body = document.body ? document.body.innerText.toLowerCase() : '';
+            var title = document.title.toLowerCase();
+            
+            // CloudFlare challenge göstergeleri
+            var isCloudFlareChallenge = body.includes('checking if the site connection is secure') ||
+                                        body.includes('just a moment') ||
+                                        body.includes('please wait') ||
+                                        title.includes('just a moment') ||
+                                        body.includes('ddos protection');
+            
+            // pageTrackData var mı kontrol et (gerçek sayfa içeriği)
+            var hasPageTrackData = typeof pageTrackData !== 'undefined' && pageTrackData !== null;
+            
+            // Sahibinden içerik göstergeleri
+            var hasSahibindenContent = body.includes('ilan') || 
+                                       body.includes('emlak') || 
+                                       body.includes('satılık') ||
+                                       body.includes('kiralık') ||
+                                       hasPageTrackData;
+            
+            return {
+              isCloudFlareChallenge: isCloudFlareChallenge,
+              hasPageTrackData: hasPageTrackData,
+              hasSahibindenContent: hasSahibindenContent,
+              bodyLength: body.length,
+              title: title
+            };
+          } catch(e) {
+            return {error: e.toString()};
+          }
+        })();
+        ''',
+      );
+
+      if (pageContentCheck != null && pageContentCheck.toString() != 'null') {
+        final contentData = json.decode(pageContentCheck);
+        final isCloudFlareChallenge = contentData['isCloudFlareChallenge'] == true;
+        final hasPageTrackData = contentData['hasPageTrackData'] == true;
+        final hasSahibindenContent = contentData['hasSahibindenContent'] == true;
+
+        if (isCloudFlareChallenge) {
+          // CloudFlare challenge aktif - buton pasif
+          emit(state.copyWith(
+            status: ParselSearchingStatus.loaded,
+            statusMessage: 'CloudFlare doğrulaması bekleniyor... Lütfen bekleyin.',
+            currentStep: 1,
+            isCloudFlareChallenge: true,
+          ));
+
+          // 3 saniye sonra tekrar kontrol et
+          Timer(const Duration(seconds: 3), () async {
+            if (!isClosed) {
+              add(WebViewLoadStopEvent(currentUrl.toString()));
+            }
+          });
+        } else if (hasPageTrackData && hasSahibindenContent) {
+          // Gerçek sayfa içeriği var - buton aktif
+          emit(state.copyWith(
+            status: ParselSearchingStatus.loaded,
+            statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+            currentStep: 1,
+            isCloudFlareChallenge: false,
+          ));
+        } else {
+          // Henüz tam yüklenmemiş - buton pasif
+          emit(state.copyWith(
+            status: ParselSearchingStatus.loaded,
+            statusMessage: 'Sayfa içeriği yükleniyor... Lütfen bekleyin.',
+            currentStep: 1,
+            isCloudFlareChallenge: true,
+          ));
+
+          // 2 saniye sonra tekrar kontrol et
+          Timer(const Duration(seconds: 2), () async {
+            if (!isClosed) {
+              add(WebViewLoadStopEvent(currentUrl.toString()));
+            }
+          });
+        }
+      } else {
+        // JavaScript hatası - varsayılan olarak buton pasif
+        emit(state.copyWith(
+          status: ParselSearchingStatus.loaded,
+          statusMessage: 'Sayfa kontrol edilemiyor... Lütfen bekleyin.',
+          currentStep: 1,
+          isCloudFlareChallenge: true,
         ));
       }
     } catch (e) {
-      // Hata durumunda da yüklendi olarak işaretle
+      // Hata durumunda buton pasif
       emit(state.copyWith(
         status: ParselSearchingStatus.loaded,
-        statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+        statusMessage: 'Sayfa yükleme kontrolü başarısız. Lütfen bekleyin.',
         currentStep: 1,
+        isCloudFlareChallenge: true,
       ));
     }
   }
@@ -706,6 +786,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       statusMessage: '',
       status: ParselSearchingStatus.initial,
       errorMessage: null,
+      isCloudFlareChallenge: false,
     ));
   }
 

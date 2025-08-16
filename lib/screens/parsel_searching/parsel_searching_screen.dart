@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_bloc.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_event.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_state.dart';
@@ -10,6 +11,7 @@ import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/action_buttons_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/control_buttons_widget.dart';
+import 'package:parsel_sorgu/screens/parsel_searching/widgets/first_time_info_bottom_sheet.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/manual_search_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/parsel_data_card_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/parsel_webview_widget.dart';
@@ -42,6 +44,9 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
   // Otomatik URL yükleme için
   bool _shouldAutoLoad = false;
 
+  // SharedPreferences key
+  static const String _firstTimeInfoShownKey = 'first_time_info_shown';
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +60,27 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
       context.read<ParselSearchingBloc>().add(UrlChangedEvent(_urlController.text));
     });
 
+    // İlk kullanım kontrolü
+    _checkFirstTimeUser();
+
     // SharedUrlBloc'tan gelen URL'yi dinleyeceğiz, burada manuel işlem yapmıyoruz
+  }
+
+  Future<void> _checkFirstTimeUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasShownInfo = prefs.getBool(_firstTimeInfoShownKey) ?? false;
+    
+    if (!hasShownInfo && mounted) {
+      // Ekran tamamen yüklendikten sonra bottom sheet'i göster
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          FirstTimeInfoBottomSheet.show(context, () async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool(_firstTimeInfoShownKey, true);
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -129,8 +154,8 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
           ),
           BlocListener<ParselSearchingBloc, ParselSearchingState>(
             listener: (context, state) {
-              // Pulse animasyonu kontrolü
-              if (state.currentStep == 1 && state.status == ParselSearchingStatus.loaded) {
+              // Pulse animasyonu kontrolü - CloudFlare challenge aktifken animasyonu başlatma
+              if (state.currentStep == 1 && state.status == ParselSearchingStatus.loaded && !state.isCloudFlareChallenge) {
                 _pulseController.repeat(reverse: true);
               } else {
                 _pulseController.stop();
