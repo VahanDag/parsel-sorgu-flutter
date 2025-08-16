@@ -9,8 +9,10 @@
       "Bash(mv:*)",
       "Bash(rm:*)",
       "Bash(flutter build:*)",
-      "Bash(flutter run:*)"
+      "Bash(flutter run:*)",
+      "mcp__ide__getDiagnostics"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

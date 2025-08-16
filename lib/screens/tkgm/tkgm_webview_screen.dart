@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_bloc.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_event.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_state.dart';
@@ -75,16 +77,29 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
           ),
         ],
       ),
-      body: BlocConsumer<TkgmBloc, TkgmState>(
-        listener: (context, state) {
-          if (state.errorMessage != null && state.errorMessage != _lastShownErrorMessage) {
-            _lastShownErrorMessage = state.errorMessage;
-            _showMessage(state.errorMessage!, isError: true);
-          } else if (state.errorMessage == null) {
-            _lastShownErrorMessage = null;
-          }
-        },
-        builder: (context, state) {
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<SharedUrlBloc, SharedUrlState>(
+            listener: (context, state) {
+              if (state is SharedUrlReceived) {
+                // Yeni URL paylaşıldığında parsel search sayfasına geri dön
+                Navigator.pop(context);
+              }
+            },
+          ),
+          BlocListener<TkgmBloc, TkgmState>(
+            listener: (context, state) {
+              if (state.errorMessage != null && state.errorMessage != _lastShownErrorMessage) {
+                _lastShownErrorMessage = state.errorMessage;
+                _showMessage(state.errorMessage!, isError: true);
+              } else if (state.errorMessage == null) {
+                _lastShownErrorMessage = null;
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<TkgmBloc, TkgmState>(
+          builder: (context, state) {
           return Stack(
             children: [
               Column(
@@ -133,7 +148,8 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
               ),
             ],
           );
-        },
+          },
+        ),
       ),
 
       // Konum yenileme butonu

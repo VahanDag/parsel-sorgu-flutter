@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,7 +12,6 @@ class ParselWebViewWidget extends StatelessWidget {
   final Function(InAppWebViewController, WebUri?) onLoadStop;
   final Function(InAppWebViewController, WebResourceRequest, WebResourceError) onReceivedError;
   final Function(InAppWebViewController, WebResourceRequest, WebResourceResponse) onReceivedHttpError;
-  final Future<NavigationActionPolicy> Function(InAppWebViewController, NavigationAction) shouldOverrideUrlLoading;
 
   const ParselWebViewWidget({
     super.key,
@@ -25,7 +23,6 @@ class ParselWebViewWidget extends StatelessWidget {
     required this.onLoadStop,
     required this.onReceivedError,
     required this.onReceivedHttpError,
-    required this.shouldOverrideUrlLoading,
   });
 
   @override
@@ -33,7 +30,8 @@ class ParselWebViewWidget extends StatelessWidget {
     return Column(
       children: [
         if (isLoading) const LinearProgressIndicator(),
-        if (showWebView) Container(
+        if (showWebView)
+          Container(
             height: 500,
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -54,7 +52,6 @@ class ParselWebViewWidget extends StatelessWidget {
                 javaScriptEnabled: true,
 
                 // CRITICAL FOR iOS: Disable App-Bound Domains restriction
-                // This is the key setting that fixes the JavaScript execution issue
                 limitsNavigationsToAppBoundDomains: false,
 
                 // iOS specific settings
@@ -72,8 +69,8 @@ class ParselWebViewWidget extends StatelessWidget {
                 domStorageEnabled: Platform.isAndroid,
                 databaseEnabled: Platform.isAndroid,
 
-                // Common settings
-                useShouldOverrideUrlLoading: true,
+                // Common settings - CloudFlare bypass için kritik
+                useShouldOverrideUrlLoading: false,
                 mediaPlaybackRequiresUserGesture: false,
                 supportZoom: true,
                 builtInZoomControls: false,
@@ -81,16 +78,26 @@ class ParselWebViewWidget extends StatelessWidget {
                 useWideViewPort: true,
                 loadWithOverviewMode: true,
 
-                // Cache and cookie settings
+                // Cache ve cookie ayarları - CloudFlare bypass için kritik
                 cacheEnabled: true,
                 clearCache: false,
+                thirdPartyCookiesEnabled: true,
+                hardwareAcceleration: true,
 
                 // Security settings
                 mixedContentMode: Platform.isAndroid ? MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW : null,
 
-                // User agent for better compatibility
-                userAgent:
-                    Platform.isIOS ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1' : null,
+                // CloudFlare bypass için kritik ayarlar
+                disableVerticalScroll: false,
+                disableHorizontalScroll: false,
+                disableContextMenu: false,
+                verticalScrollBarEnabled: true,
+                horizontalScrollBarEnabled: true,
+                
+                // User Agent - CloudFlare tarafından mobile cihaz olarak algılanması için
+                userAgent: Platform.isIOS 
+                  ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
+                  : 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
               ),
 
               onWebViewCreated: onWebViewCreated,
@@ -99,7 +106,6 @@ class ParselWebViewWidget extends StatelessWidget {
               onLoadStop: onLoadStop,
               onReceivedError: onReceivedError,
               onReceivedHttpError: onReceivedHttpError,
-              shouldOverrideUrlLoading: shouldOverrideUrlLoading,
 
               // Console logging for debugging
               onConsoleMessage: (controller, consoleMessage) {

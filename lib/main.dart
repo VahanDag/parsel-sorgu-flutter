@@ -94,34 +94,13 @@ class AppHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SharedUrlBloc, SharedUrlState>(
-      // listener kullanarak state değişikliklerini yakalayabiliriz
-      listener: (context, state) {
-        print("BlocConsumer: State changed to ${state.runtimeType}");
-        if (state is SharedUrlReceived) {
-          print("BlocConsumer: SharedUrl received = ${state.url}");
-          // Gerekirse burada navigation veya diğer işlemler yapılabilir
-        }
-      },
-      // buildWhen ile gereksiz rebuild'leri önleyebiliriz
-      buildWhen: (previous, current) {
-        // Her zaman rebuild et (test amaçlı)
-        print("BlocConsumer: Previous state: ${previous.runtimeType}, Current state: ${current.runtimeType}");
-        return true;
-      },
+      listener: (context, state) {},
       builder: (context, state) {
-        print("BlocConsumer: Building with state ${state.runtimeType}");
-        String? sharedUrl;
-
-        if (state is SharedUrlReceived) {
-          sharedUrl = state.url;
-          print("BlocConsumer: SharedUrl in builder = $sharedUrl");
-        }
-
         return SplashScreen(
-          sharedUrl: sharedUrl,
-          nextScreen: ParselSearchScreen(
-            sharedUrl: sharedUrl,
-          ),
+          nextScreen: ParselSearchScreen(),
+          // nextScreen: InAppWebView(
+          //   initialUrlRequest: URLRequest(url: WebUri("https://www.sahibinden.com/ilan/emlak-arsa-satilik-fiyat-dustu-ergene-misinlide-1-donum-hisse-imara-yakin-1257558338/detay")),
+          // ),
         );
       },
     );

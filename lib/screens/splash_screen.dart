@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
-  final String? sharedUrl;
   final Widget nextScreen;
 
-  const SplashScreen({super.key, this.sharedUrl, required this.nextScreen});
+  const SplashScreen({super.key, required this.nextScreen});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();

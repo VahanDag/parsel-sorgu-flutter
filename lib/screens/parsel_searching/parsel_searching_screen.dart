@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_bloc.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_event.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_state.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_bloc.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/action_buttons_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/control_buttons_widget.dart';
@@ -19,8 +20,7 @@ import 'package:parsel_sorgu/screens/parsel_searching/widgets/url_input_widget.d
 import 'package:parsel_sorgu/screens/tkgm/tkgm_webview_screen.dart';
 
 class ParselSearchScreen extends StatefulWidget {
-  final String? sharedUrl;
-  const ParselSearchScreen({super.key, this.sharedUrl});
+  const ParselSearchScreen({super.key});
 
   @override
   State<ParselSearchScreen> createState() => _ParselSearchScreenState();
@@ -55,23 +55,13 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
       context.read<ParselSearchingBloc>().add(UrlChangedEvent(_urlController.text));
     });
 
-    // İlk URL'yi set et ve otomatik aramayı başlat
-    if (widget.sharedUrl != null) {
-      context.read<ParselSearchingBloc>().add(SetInitialUrlEvent(widget.sharedUrl));
-      _urlController.text = widget.sharedUrl!;
-      _shouldAutoLoad = true;
-    }
+    // SharedUrlBloc'tan gelen URL'yi dinleyeceğiz, burada manuel işlem yapmıyoruz
   }
 
   @override
   void didUpdateWidget(ParselSearchScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.sharedUrl != widget.sharedUrl && widget.sharedUrl != null) {
-      context.read<ParselSearchingBloc>().add(SetInitialUrlEvent(widget.sharedUrl));
-      _urlController.text = widget.sharedUrl!;
-      _shouldAutoLoad = true;
-    }
+    // SharedUrlBloc'tan gelen URL'yi dinleyeceğiz, burada manuel işlem yapmıyoruz
   }
 
   void _clearUrlController() {
@@ -121,200 +111,212 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         elevation: 0,
       ),
-      body: BlocConsumer<ParselSearchingBloc, ParselSearchingState>(
-        listener: (context, state) {
-          // Pulse animasyonu kontrolü
-          if (state.currentStep == 1 && state.status == ParselSearchingStatus.loaded) {
-            _pulseController.repeat(reverse: true);
-          } else {
-            _pulseController.stop();
-          }
-
-          // Hata mesajları - sadece yeni hata mesajlarını göster
-          if (state.errorMessage != null && state.errorMessage != _lastShownError) {
-            _lastShownError = state.errorMessage;
-            _showMessage(state.errorMessage!, isError: true);
-          } else if (state.errorMessage == null) {
-            _lastShownError = null;
-          }
-
-          // TKGM'ye yönlendirme - sadece tüm veriler tamamsa
-          if (state.parselData != null && state.parselData!.containsKey('tkgmUrl') && state.status == ParselSearchingStatus.extracted && _isParselDataComplete(state.parselData)) {
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BlocProvider(
-                      create: (context) => TkgmBloc(),
-                      child: TKGMWebViewScreen(url: state.parselData!['tkgmUrl']),
-                    ),
-                  ),
-                );
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<SharedUrlBloc, SharedUrlState>(
+            listener: (context, state) {
+              if (state is SharedUrlReceived) {
+                print("SharedUrlBloc: URL received = ${state.url}");
+                // Önce mevcut state'i temizle (önceki parsel data'sını sil)
+                context.read<ParselSearchingBloc>().add(const ClearUrlEvent());
+                // URL'yi ParselSearchingBloc'a gönder ve text controller'a set et
+                context.read<ParselSearchingBloc>().add(SetInitialUrlEvent(state.url));
+                _urlController.text = state.url;
+                _shouldAutoLoad = true;
+                context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
               }
-            });
-          }
-        },
-        builder: (context, state) {
-          return GestureDetector(
-            onTap: () => FocusNode().unfocus(),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Üst kısım - Input ve butonlar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [BoxShadow(color: Colors.grey.shade200, offset: const Offset(0, 2), blurRadius: 4)],
-                    ),
-                    child: Column(
-                      children: [
-                        // Adım göstergesi
-                        StepIndicatorWidget(currentStep: state.currentStep),
+            },
+          ),
+          BlocListener<ParselSearchingBloc, ParselSearchingState>(
+            listener: (context, state) {
+              // Pulse animasyonu kontrolü
+              if (state.currentStep == 1 && state.status == ParselSearchingStatus.loaded) {
+                _pulseController.repeat(reverse: true);
+              } else {
+                _pulseController.stop();
+              }
 
-                        // Arama modu toggle
-                        const SearchModeToggleWidget(),
+              // Hata mesajları - sadece yeni hata mesajlarını göster
+              if (state.errorMessage != null && state.errorMessage != _lastShownError) {
+                _lastShownError = state.errorMessage;
+                _showMessage(state.errorMessage!, isError: true);
+              } else if (state.errorMessage == null) {
+                _lastShownError = null;
+              }
 
-                        // Input alanı - sadece WebView modunda göster
-                        if (state.searchMode == SearchMode.webView)
+              // TKGM'ye yönlendirme - sadece tüm veriler tamamsa
+              if (state.parselData != null && state.parselData!.containsKey('tkgmUrl') && state.status == ParselSearchingStatus.extracted && _isParselDataComplete(state.parselData)) {
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider(
+                          create: (context) => TkgmBloc(),
+                          child: TKGMWebViewScreen(url: state.parselData!['tkgmUrl']),
+                        ),
+                      ),
+                    );
+                  }
+                });
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<ParselSearchingBloc, ParselSearchingState>(
+          builder: (context, state) {
+            return GestureDetector(
+              onTap: () => FocusNode().unfocus(),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Üst kısım - Input ve butonlar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [BoxShadow(color: Colors.grey.shade200, offset: const Offset(0, 2), blurRadius: 4)],
+                      ),
+                      child: Column(
+                        children: [
+                          // Adım göstergesi
+                          StepIndicatorWidget(currentStep: state.currentStep),
+
+                          // Arama modu toggle
+                          const SearchModeToggleWidget(),
+
+                          // Input alanı - sadece WebView modunda göster
+                          if (state.searchMode == SearchMode.webView)
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  UrlInputWidget(
+                                    controller: _urlController,
+                                    onClear: _clearUrlController,
+                                    onChanged: (value) {
+                                      // BLoC handles URL changes via listener
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Butonlar
+                                  ActionButtonsWidget(
+                                    isLoading: state.isLoading,
+                                    isExtractingData: state.isExtractingData,
+                                    isValidUrl: state.isValidUrl,
+                                    currentStep: state.currentStep,
+                                    onLoadUrl: () {
+                                      context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
+                                    },
+                                    onExtractData: () {
+                                      context.read<ParselSearchingBloc>().add(const ExtractDataEvent());
+                                    },
+                                    pulseAnimation: _pulseAnimation,
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Manuel arama formu - sadece Manuel modunda göster
+                          if (state.searchMode == SearchMode.manual) const ManualSearchWidget(),
+
+                          // Durum mesajı ve Parsel kartı - her iki modda da göster
                           Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Column(
                               children: [
-                                UrlInputWidget(
-                                  controller: _urlController,
-                                  onClear: _clearUrlController,
-                                  onChanged: (value) {
-                                    // BLoC handles URL changes via listener
-                                  },
-                                ),
-                                const SizedBox(height: 16),
+                                // Durum mesajı
+                                StatusMessageWidget(statusMessage: state.statusMessage),
 
-                                // Butonlar
-                                ActionButtonsWidget(
-                                  isLoading: state.isLoading,
-                                  isExtractingData: state.isExtractingData,
-                                  isValidUrl: state.isValidUrl,
-                                  currentStep: state.currentStep,
-                                  onLoadUrl: () {
-                                    context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
-                                  },
-                                  onExtractData: () {
-                                    context.read<ParselSearchingBloc>().add(const ExtractDataEvent());
-                                  },
-                                  pulseAnimation: _pulseAnimation,
-                                ),
+                                // Parsel bilgileri kartı
+                                if (state.parselData != null) ParselDataCardWidget(parselData: state.parselData!),
                               ],
                             ),
                           ),
 
-                        // Manuel arama formu - sadece Manuel modunda göster
-                        if (state.searchMode == SearchMode.manual) const ManualSearchWidget(),
-
-                        // Durum mesajı ve Parsel kartı - her iki modda da göster
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            children: [
-                              // Durum mesajı
-                              StatusMessageWidget(statusMessage: state.statusMessage),
-
-                              // Parsel bilgileri kartı
-                              if (state.parselData != null) ParselDataCardWidget(parselData: state.parselData!),
-                            ],
-                          ),
-                        ),
-
-                        // WebView kontrol butonları - sadece WebView modunda göster
-                        if (state.searchMode == SearchMode.webView)
-                          ControlButtonsWidget(
-                            showWebView: state.showWebView,
-                            onToggleWebView: () {
-                              context.read<ParselSearchingBloc>().add(const ToggleWebViewVisibilityEvent());
-                            },
-                          ),
-                      ],
+                          // WebView kontrol butonları - sadece WebView modunda göster
+                          if (state.searchMode == SearchMode.webView)
+                            ControlButtonsWidget(
+                              showWebView: state.showWebView,
+                              onToggleWebView: () {
+                                context.read<ParselSearchingBloc>().add(const ToggleWebViewVisibilityEvent());
+                              },
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // WebView alanı - sadece WebView modunda göster
-                  if (state.searchMode == SearchMode.webView)
-                    ParselWebViewWidget(
-                      showWebView: state.showWebView,
-                      isLoading: state.isLoading,
-                      onWebViewCreated: (controller) {
-                        context.read<ParselSearchingBloc>().setWebViewController(controller);
-                        print('WebView oluşturuldu');
+                    // WebView alanı - sadece WebView modunda göster
+                    if (state.searchMode == SearchMode.webView)
+                      ParselWebViewWidget(
+                        showWebView: state.showWebView,
+                        isLoading: state.isLoading,
+                        onWebViewCreated: (controller) {
+                          context.read<ParselSearchingBloc>().setWebViewController(controller);
+                          print('WebView oluşturuldu');
 
-                        // WebView hazır olduğunda otomatik yükleme yap
-                        if (_shouldAutoLoad && state.url.isNotEmpty) {
-                          _shouldAutoLoad = false;
-                          Future.delayed(const Duration(milliseconds: 500), () {
-                            if (mounted) {
-                              context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
-                            }
-                          });
-                        }
-                      },
-                      onLoadStart: (controller, url) {
-                        final urlString = url.toString();
-                        if (urlString.startsWith('http') && urlString != _lastProcessedUrl) {
-                          print('Yükleme başladı: $url');
-                          context.read<ParselSearchingBloc>().add(WebViewLoadStartEvent(urlString));
-                        }
-                      },
-                      onProgressChanged: (controller, progress) {
-                        // Sadece önemli progress güncellemelerini logla (0, 50, 100)
-                        if (progress == 0 || progress == 50 || progress == 100) {
-                          print('Yükleme ilerlemesi: $progress%');
-                        }
-                      },
-                      onLoadStop: (controller, url) {
-                        final urlString = url.toString();
-                        if (urlString.startsWith('http') && urlString.contains('sahibinden.com')) {
-                          print('Yükleme tamamlandı: $url');
-                          _lastProcessedUrl = urlString;
-                          context.read<ParselSearchingBloc>().add(WebViewLoadStopEvent(urlString));
-                        }
-                      },
-                      onReceivedError: (controller, request, error) {
-                        final requestUrl = request.url.toString();
-                        // Sadece HTTP/HTTPS URL'lerde ve önemli hatalarda log yap
-                        if ((requestUrl.startsWith('http://') || requestUrl.startsWith('https://')) && !requestUrl.contains('favicon.ico') && !requestUrl.contains('sahibinden://')) {
-                          print('WebView hatası: ${error.description} - URL: ${request.url}');
-                          context.read<ParselSearchingBloc>().add(WebViewLoadErrorEvent(error.description));
-                        }
-                      },
-                      onReceivedHttpError: (controller, request, errorResponse) {
-                        final requestUrl = request.url.toString();
-                        final statusCode = errorResponse.statusCode;
-                        // Sadece 4xx ve 5xx hataları ve ana sayfa hatalarını logla
-                        if (statusCode != null && statusCode >= 400 && !requestUrl.contains('favicon.ico') && requestUrl.contains('sahibinden.com')) {
-                          print('HTTP hatası: $statusCode - URL: ${request.url}');
-                          context.read<ParselSearchingBloc>().add(WebViewLoadErrorEvent('HTTP hatası: $statusCode'));
-                        }
-                      },
-                      shouldOverrideUrlLoading: (controller, navigationAction) async {
-                        final url = navigationAction.request.url.toString();
-
-                        // App scheme'leri (sahibinden://) iptal et
-                        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                          return NavigationActionPolicy.CANCEL;
-                        }
-
-                        // Sadece sahibinden.com URL'lerini logla
-                        if (url.contains('sahibinden.com')) {
-                          print('URL yönlendirme: $url');
-                        }
-
-                        return NavigationActionPolicy.ALLOW;
-                      },
-                    ),
-                ],
+                          // WebView hazır olduğunda otomatik yükleme yap
+                          if (_shouldAutoLoad && state.url.isNotEmpty) {
+                            _shouldAutoLoad = false;
+                            Future.delayed(const Duration(milliseconds: 500), () {
+                              if (mounted) {
+                                context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
+                              }
+                            });
+                          }
+                        },
+                        onLoadStart: (controller, url) {
+                          final urlString = url.toString();
+                          if (urlString.startsWith('http') && urlString != _lastProcessedUrl) {
+                            print('Yükleme başladı: $url');
+                            context.read<ParselSearchingBloc>().add(WebViewLoadStartEvent(urlString));
+                          }
+                        },
+                        onProgressChanged: (controller, progress) {
+                          // Sadece önemli progress güncellemelerini logla (0, 50, 100)
+                          if (progress == 0 || progress == 50 || progress == 100) {
+                            print('Yükleme ilerlemesi: $progress%');
+                          }
+                        },
+                        onLoadStop: (controller, url) {
+                          final urlString = url.toString();
+                          if (urlString.startsWith('http') && urlString.contains('sahibinden.com')) {
+                            print('Yükleme tamamlandı: $url');
+                            _lastProcessedUrl = urlString;
+                            context.read<ParselSearchingBloc>().add(WebViewLoadStopEvent(urlString));
+                          }
+                        },
+                        onReceivedError: (controller, request, error) {
+                          final requestUrl = request.url.toString();
+                          // Sadece HTTP/HTTPS URL'lerde ve önemli hatalarda log yap
+                          if ((requestUrl.startsWith('http://') || requestUrl.startsWith('https://')) && !requestUrl.contains('favicon.ico') && !requestUrl.contains('sahibinden://')) {
+                            print('WebView hatası: ${error.description} - URL: ${request.url}');
+                            context.read<ParselSearchingBloc>().add(WebViewLoadErrorEvent(error.description));
+                          }
+                        },
+                        onReceivedHttpError: (controller, request, errorResponse) {
+                          final requestUrl = request.url.toString();
+                          final statusCode = errorResponse.statusCode;
+                          
+                          // CloudFlare 403 hatalarını ignore et - bunlar normal CloudFlare challenge'ları
+                          if (statusCode == 403 && (requestUrl.contains('secure.sahibinden.com') || requestUrl.contains('checkLoading'))) {
+                            print('CloudFlare challenge algılandı: $statusCode - URL: ${request.url}');
+                            return; // Error event göndermiyoruz
+                          }
+                          
+                          // Diğer kritik hataları sadece ana domain için logla
+                          if (statusCode != null && statusCode >= 500 && requestUrl.contains('www.sahibinden.com') && !requestUrl.contains('favicon.ico')) {
+                            print('Kritik HTTP hatası: $statusCode - URL: ${request.url}');
+                            context.read<ParselSearchingBloc>().add(WebViewLoadErrorEvent('Sunucu hatası: $statusCode'));
+                          }
+                        },
+                      ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

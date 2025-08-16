@@ -76,7 +76,8 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
     ));
 
     _loadingTimer?.cancel();
-    _loadingTimer = Timer(const Duration(seconds: 30), () {
+    _loadingTimer = Timer(const Duration(seconds: 60), () {
+      // CloudFlare için süreyi artırdık
       if (state.status == ParselSearchingStatus.loading) {
         add(const WebViewLoadErrorEvent('Sayfa yükleme zaman aşımına uğradı'));
       }
@@ -86,6 +87,9 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       await _webViewController!.loadUrl(
         urlRequest: URLRequest(url: WebUri(event.url)),
       );
+      print("URL yükleme başlatıldı");
+      // CloudFlare'ın tamamen yüklenmesi için herhangi bir işlem yapmıyoruz
+      // onLoadStop callback'inde beklemeyi yapacağız
     } catch (e) {
       _loadingTimer?.cancel();
       emit(state.copyWith(
@@ -520,7 +524,6 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       int? ilceId;
 
       for (var feature in ilceData['features']) {
-        print("${feature['properties']['text'].toString().toLowerCase()} ${data['ilce'].toString().toLowerCase()}");
         if (feature['properties']['text'].toString().toLowerCase() == data['ilce'].toString().toLowerCase()) {
           ilceId = int.tryParse(feature['properties']['id'].toString());
           print("bitti ilce $ilceId");
@@ -547,14 +550,45 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
       final cleanMahalleName = data['mahalle'].toString().replaceAll(' Mh.', '').replaceAll(' Mah.', '').toLowerCase();
 
+      // İlk önce tam eşleşme ara
       for (var feature in mahalleData['features']) {
         final mahalleName = feature['properties']['text'].toString().toLowerCase();
-        if (mahalleName == cleanMahalleName || mahalleName.contains(cleanMahalleName)) {
+        print("$mahalleName $cleanMahalleName");
+
+        if (mahalleName == cleanMahalleName || mahalleName.contains(cleanMahalleName) || cleanMahalleName.contains(mahalleName)) {
           print(feature['properties']['id'].toString());
           mahalleId = int.tryParse(feature['properties']['id'].toString());
-          print("bitti mahalleId $mahalleId");
-
+          print("bitti mahalleId (tam eşleşme) $mahalleId");
           break;
+        }
+      }
+
+      // Tam eşleşme bulunamazsa fuzzy matching ile ara
+      if (mahalleId == null) {
+        print("Tam eşleşme bulunamadı, fuzzy matching başlatılıyor...");
+        double bestSimilarity = 0.0;
+        Map<String, dynamic>? bestMatch;
+
+        for (var feature in mahalleData['features']) {
+          final mahalleName = feature['properties']['text'].toString().toLowerCase();
+          final similarity = _calculateStringSimilarity(cleanMahalleName, mahalleName);
+
+          print("'$mahalleName' vs '$cleanMahalleName' => ${(similarity * 100).toStringAsFixed(1)}%");
+
+          // En az %60 benzerlik ve önceki en iyi eşleşmeden daha iyi ise
+          if (similarity > 0.6 && similarity > bestSimilarity) {
+            bestSimilarity = similarity;
+            bestMatch = feature;
+            print("Yeni en iyi eşleşme: '$mahalleName' (${(bestSimilarity * 100).toStringAsFixed(1)}%)");
+          }
+        }
+
+        if (bestMatch != null) {
+          mahalleId = int.tryParse(bestMatch['properties']['id'].toString());
+          print("bitti mahalleId (fuzzy matching) $mahalleId - benzerlik: ${(bestSimilarity * 100).toStringAsFixed(1)}%");
+          print("Eşleşen: '${bestMatch['properties']['text']}' <- '$cleanMahalleName'");
+        } else {
+          print("Fuzzy matching ile de eşleşme bulunamadı (min %60 benzerlik gerekli)");
         }
       }
 
@@ -592,13 +626,56 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
     ));
   }
 
-  void _onWebViewLoadStop(WebViewLoadStopEvent event, Emitter<ParselSearchingState> emit) {
+  void _onWebViewLoadStop(WebViewLoadStopEvent event, Emitter<ParselSearchingState> emit) async {
     _loadingTimer?.cancel();
+
+    // CloudFlare challenge'ını beklemek için daha uzun süre bekleyelim
     emit(state.copyWith(
-      status: ParselSearchingStatus.loaded,
-      statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
-      currentStep: 1,
+      statusMessage: 'CloudFlare koruması kontrol ediliyor...',
     ));
+
+    // CloudFlare'ın tamamen bypass olmasını bekle
+    await Future.delayed(const Duration(seconds: 3));
+
+    // Sayfanın gerçekten Sahibinden.com olup olmadığını kontrol et
+    try {
+      final currentUrl = await _webViewController?.getUrl();
+      if (currentUrl != null && currentUrl.toString().contains('sahibinden.com')) {
+        // Sayfanın title'ını kontrol ederek yüklenme durumunu doğrula
+        final title = await _webViewController!.evaluateJavascript(
+          source: 'document.title',
+        );
+
+        if (title != null && !title.toString().toLowerCase().contains('loading')) {
+          emit(state.copyWith(
+            status: ParselSearchingStatus.loaded,
+            statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+            currentStep: 1,
+          ));
+        } else {
+          // Hala yükleniyor, biraz daha bekle
+          await Future.delayed(const Duration(seconds: 3));
+          emit(state.copyWith(
+            status: ParselSearchingStatus.loaded,
+            statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+            currentStep: 1,
+          ));
+        }
+      } else {
+        emit(state.copyWith(
+          status: ParselSearchingStatus.loaded,
+          statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+          currentStep: 1,
+        ));
+      }
+    } catch (e) {
+      // Hata durumunda da yüklendi olarak işaretle
+      emit(state.copyWith(
+        status: ParselSearchingStatus.loaded,
+        statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+        currentStep: 1,
+      ));
+    }
   }
 
   void _onWebViewLoadError(WebViewLoadErrorEvent event, Emitter<ParselSearchingState> emit) {
@@ -655,5 +732,49 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
     // TKGM ID'lerini bul ve yönlendir
     await _findMahalleIdAndRedirect(parselData, emit);
+  }
+
+  /// String similarity hesaplar (Levenshtein distance kullanarak)
+  /// 0.0 = hiç benzemez, 1.0 = tamamen aynı
+  double _calculateStringSimilarity(String s1, String s2) {
+    if (s1 == s2) return 1.0;
+    if (s1.isEmpty || s2.isEmpty) return 0.0;
+
+    // Levenshtein distance hesapla
+    final distance = _levenshteinDistance(s1, s2);
+    final maxLength = s1.length > s2.length ? s1.length : s2.length;
+
+    // Benzerlik oranını döndür (1 - normalizedDistance)
+    return 1.0 - (distance / maxLength);
+  }
+
+  /// Levenshtein distance algoritması
+  int _levenshteinDistance(String s1, String s2) {
+    final len1 = s1.length;
+    final len2 = s2.length;
+
+    // DP tablosu oluştur
+    final dp = List.generate(len1 + 1, (i) => List.filled(len2 + 1, 0));
+
+    // İlk satır ve sütunu doldur
+    for (int i = 0; i <= len1; i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= len2; j++) {
+      dp[0][j] = j;
+    }
+
+    // DP tablosunu doldur
+    for (int i = 1; i <= len1; i++) {
+      for (int j = 1; j <= len2; j++) {
+        if (s1[i - 1] == s2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + [dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]].reduce((a, b) => a < b ? a : b);
+        }
+      }
+    }
+
+    return dp[len1][len2];
   }
 }
