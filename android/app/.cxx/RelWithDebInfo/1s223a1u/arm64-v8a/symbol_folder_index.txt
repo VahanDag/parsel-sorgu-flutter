@@ -1,0 +1,1 @@
+/Users/vahandag/Desktop/vahan/Flutter/parsel_sorgu/build/app/intermediates/cxx/RelWithDebInfo/1s223a1u/obj/arm64-v8a

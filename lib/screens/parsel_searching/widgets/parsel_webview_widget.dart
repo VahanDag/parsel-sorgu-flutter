@@ -93,11 +93,11 @@ class ParselWebViewWidget extends StatelessWidget {
                 disableContextMenu: false,
                 verticalScrollBarEnabled: true,
                 horizontalScrollBarEnabled: true,
-                
+
                 // User Agent - CloudFlare tarafından mobile cihaz olarak algılanması için
-                userAgent: Platform.isIOS 
-                  ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
-                  : 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
+                // userAgent: Platform.isIOS
+                //   ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
+                //   : 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
               ),
 
               onWebViewCreated: onWebViewCreated,

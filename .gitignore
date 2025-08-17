@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+/windows/
+/macos/
+/linux/
 
 # Symbolication related
 app.*.symbols
@@ -46,3 +49,4 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+.fvmrc
