@@ -40,8 +40,17 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
   }
 
   void _onUrlChanged(UrlChangedEvent event, Emitter<ParselSearchingState> emit) {
+    String processedUrl = event.url.trim();
+    
+    // Eğer URL boş değilse ve http/https ile başlamıyorsa, https ekle
+    if (processedUrl.isNotEmpty && 
+        !processedUrl.startsWith('http://') && 
+        !processedUrl.startsWith('https://')) {
+      processedUrl = 'https://$processedUrl';
+    }
+    
     emit(state.copyWith(
-      url: event.url,
+      url: processedUrl,
       currentStep: 0,
       parselData: null,
       statusMessage: '',
@@ -642,13 +651,13 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
     try {
       final currentUrl = await _webViewController?.getUrl();
-      
-      // Sahibinden.com sayfası değilse direkt geç
+      print(currentUrl.toString());
+      // Sahibinden.com sayfası değilse sadece yüklendi durumuna geç, parsel sorgula aktif olmasın
       if (currentUrl == null || !currentUrl.toString().contains('sahibinden.com')) {
         emit(state.copyWith(
           status: ParselSearchingStatus.loaded,
-          statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
-          currentStep: 1,
+          statusMessage: 'Sayfa yüklendi.',
+          currentStep: 0,
           isCloudFlareChallenge: false,
         ));
         return;
@@ -692,9 +701,21 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
         ''',
       );
+      print("pageContentCheck ${pageContentCheck.runtimeType}");
+      print("pageContentCheck content $pageContentCheck");
 
       if (pageContentCheck != null && pageContentCheck.toString() != 'null') {
-        final contentData = json.decode(pageContentCheck);
+        Map<String, dynamic> contentData;
+        
+        // Check if pageContentCheck is already a Map or if it's a String that needs decoding
+        if (pageContentCheck is Map) {
+          contentData = Map<String, dynamic>.from(pageContentCheck);
+        } else if (pageContentCheck is String) {
+          contentData = json.decode(pageContentCheck);
+        } else {
+          throw Exception('Unexpected data type: ${pageContentCheck.runtimeType}');
+        }
+        
         final isCloudFlareChallenge = contentData['isCloudFlareChallenge'] == true;
         final hasPageTrackData = contentData['hasPageTrackData'] == true;
         final hasSahibindenContent = contentData['hasSahibindenContent'] == true;
@@ -748,6 +769,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         ));
       }
     } catch (e) {
+      print(e.toString());
       // Hata durumunda buton pasif
       emit(state.copyWith(
         status: ParselSearchingStatus.loaded,

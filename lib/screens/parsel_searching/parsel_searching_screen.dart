@@ -8,6 +8,7 @@ import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_event.dart'
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_state.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_bloc.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_event.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/action_buttons_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/control_buttons_widget.dart';
@@ -43,6 +44,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
 
   // Otomatik URL yükleme için
   bool _shouldAutoLoad = false;
+  String? _pendingUrl;
 
   // SharedPreferences key
   static const String _firstTimeInfoShownKey = 'first_time_info_shown';
@@ -63,7 +65,14 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
     // İlk kullanım kontrolü
     _checkFirstTimeUser();
 
-    // SharedUrlBloc'tan gelen URL'yi dinleyeceğiz, burada manuel işlem yapmıyoruz
+    // Sayfa mount olduktan sonra SharedUrlBloc'un son state'ini kontrol et
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sharedUrlBloc = context.read<SharedUrlBloc>();
+      if (sharedUrlBloc.state is SharedUrlReceived) {
+        print("ParselSearchingScreen: Found existing SharedUrlReceived state, re-emitting");
+        sharedUrlBloc.add(const ReemitLastUrl());
+      }
+    });
   }
 
   Future<void> _checkFirstTimeUser() async {
@@ -148,7 +157,17 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                 context.read<ParselSearchingBloc>().add(SetInitialUrlEvent(state.url));
                 _urlController.text = state.url;
                 _shouldAutoLoad = true;
-                context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
+                _pendingUrl = state.url; // URL'i güvenli bir şekilde sakla
+                
+                // iOS'ta WebView oluşturulmadıysa, biraz bekleyip manuel trigger yapalım
+                Future.delayed(const Duration(seconds: 2), () {
+                  if (mounted && _shouldAutoLoad && _pendingUrl != null) {
+                    print("iOS fallback: Manuel LoadUrlEvent tetikleniyor");
+                    context.read<ParselSearchingBloc>().add(LoadUrlEvent(_pendingUrl!));
+                    _shouldAutoLoad = false;
+                    _pendingUrl = null;
+                  }
+                });
               }
             },
           ),
@@ -279,15 +298,26 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                         onWebViewCreated: (controller) {
                           context.read<ParselSearchingBloc>().setWebViewController(controller);
                           print('WebView oluşturuldu');
+                          print('_shouldAutoLoad: $_shouldAutoLoad');
+                          print('state.url: ${state.url}');
+                          print('state.url.isNotEmpty: ${state.url.isNotEmpty}');
+                          print('_urlController.text: ${_urlController.text}');
+                          print('_urlController.text.isNotEmpty: ${_urlController.text.isNotEmpty}');
 
                           // WebView hazır olduğunda otomatik yükleme yap
-                          if (_shouldAutoLoad && state.url.isNotEmpty) {
+                          if (_shouldAutoLoad && _pendingUrl != null && _pendingUrl!.isNotEmpty) {
+                            print('Otomatik yükleme başlatılıyor: $_pendingUrl');
                             _shouldAutoLoad = false;
+                            final urlToLoad = _pendingUrl!;
+                            _pendingUrl = null;
                             Future.delayed(const Duration(milliseconds: 500), () {
                               if (mounted) {
-                                context.read<ParselSearchingBloc>().add(LoadUrlEvent(state.url));
+                                print('LoadUrlEvent tetikleniyor: $urlToLoad');
+                                context.read<ParselSearchingBloc>().add(LoadUrlEvent(urlToLoad));
                               }
                             });
+                          } else {
+                            print('Otomatik yükleme şartları sağlanmadı - _shouldAutoLoad: $_shouldAutoLoad, _pendingUrl: $_pendingUrl, _urlController.text: ${_urlController.text}');
                           }
                         },
                         onLoadStart: (controller, url) {
@@ -305,7 +335,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                         },
                         onLoadStop: (controller, url) {
                           final urlString = url.toString();
-                          if (urlString.startsWith('http') && urlString.contains('sahibinden.com')) {
+                          if (urlString.startsWith('http')) {
                             print('Yükleme tamamlandı: $url');
                             _lastProcessedUrl = urlString;
                             context.read<ParselSearchingBloc>().add(WebViewLoadStopEvent(urlString));

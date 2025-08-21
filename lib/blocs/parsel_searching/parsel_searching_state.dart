@@ -39,7 +39,7 @@ class ParselSearchingState extends Equatable {
     this.isCloudFlareChallenge = false,
   });
 
-  bool get isValidUrl => url.isNotEmpty && (url.contains('sahibinden.com') || url.contains('shbd.io'));
+  bool get isValidUrl => url.isNotEmpty;
   bool get isLoading => status == ParselSearchingStatus.loading;
   bool get isExtractingData => status == ParselSearchingStatus.extracting;
   bool get canLoadUrl => isValidUrl && !isLoading && !isExtractingData;

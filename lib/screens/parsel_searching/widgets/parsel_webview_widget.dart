@@ -27,6 +27,7 @@ class ParselWebViewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('ParselWebViewWidget build - showWebView: $showWebView, isLoading: $isLoading');
     return Column(
       children: [
         if (isLoading) const LinearProgressIndicator(),
@@ -46,7 +47,10 @@ class ParselWebViewWidget extends StatelessWidget {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: InAppWebView(
+            child: Builder(
+              builder: (context) {
+                print('Creating InAppWebView widget');
+                return InAppWebView(
               initialSettings: InAppWebViewSettings(
                 // CRITICAL: JavaScript must be enabled
                 javaScriptEnabled: true,
@@ -100,7 +104,10 @@ class ParselWebViewWidget extends StatelessWidget {
                 //   : 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
               ),
 
-              onWebViewCreated: onWebViewCreated,
+              onWebViewCreated: (controller) {
+                print('InAppWebView onWebViewCreated called');
+                onWebViewCreated(controller);
+              },
               onLoadStart: onLoadStart,
               onProgressChanged: onProgressChanged,
               onLoadStop: onLoadStop,
@@ -110,6 +117,8 @@ class ParselWebViewWidget extends StatelessWidget {
               // Console logging for debugging
               onConsoleMessage: (controller, consoleMessage) {
                 print('Console: ${consoleMessage.message}');
+              },
+                );
               },
             ),
           ),

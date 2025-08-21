@@ -26,7 +26,7 @@ class ActionButtonsWidget extends StatelessWidget {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: (isLoading || !isValidUrl) ? null : onLoadUrl,
+            onPressed: isLoading ? null : onLoadUrl,
             icon: isLoading
                 ? const SizedBox(
                     width: 20,

@@ -115,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade600,
                                 borderRadius: BorderRadius.circular(24),
-                                boxShadow: [BoxShadow(color: Colors.blue.shade200, blurRadius: 20, spreadRadius: 5)],
+                                boxShadow: [BoxShadow(color: const Color(0xFF90CAF9), blurRadius: 20, spreadRadius: 5)],
                               ),
                               child: // Icon yerine Image.asset kullanın
                                   ClipRRect(

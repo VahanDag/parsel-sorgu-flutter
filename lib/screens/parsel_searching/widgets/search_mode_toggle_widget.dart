@@ -22,7 +22,7 @@ class SearchModeToggleWidget extends StatelessWidget {
             children: [
               _buildModeButton(
                 context,
-                'WebView Arama',
+                'Otomatik Arama',
                 SearchMode.webView,
                 state.searchMode == SearchMode.webView,
                 Icons.web,
@@ -57,9 +57,7 @@ class SearchModeToggleWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            color: isSelected 
-                ? Theme.of(context).colorScheme.primary
-                : Colors.transparent,
+            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -68,9 +66,7 @@ class SearchModeToggleWidget extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: isSelected 
-                    ? Colors.white 
-                    : Theme.of(context).colorScheme.onSurface,
+                color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
               ),
               const SizedBox(width: 6),
               Text(
@@ -78,9 +74,7 @@ class SearchModeToggleWidget extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
-                  color: isSelected 
-                      ? Colors.white 
-                      : Theme.of(context).colorScheme.onSurface,
+                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],

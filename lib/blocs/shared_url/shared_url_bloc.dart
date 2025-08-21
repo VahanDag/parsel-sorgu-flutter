@@ -18,6 +18,7 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
     on<ShowInvalidUrlModal>(_onShowInvalidUrlModal);
     on<DismissInvalidUrlModal>(_onDismissInvalidUrlModal);
     on<ClearSharedUrl>(_onClearSharedUrl);
+    on<ReemitLastUrl>(_onReemitLastUrl);
 
     // Shared intent stream'ini dinle
     _initializeSharedIntentListening();
@@ -110,9 +111,12 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
         if (content.contains('shbd.io')) {
           print("SharedUrlBloc: Expanding short URL");
           final expandedUrl = await UrlExpander.expandUrl(content);
-          if (expandedUrl != null) {
+          if (expandedUrl != null && expandedUrl != content) {
             finalUrl = expandedUrl;
             print("SharedUrlBloc: URL expanded to: $finalUrl");
+          } else {
+            print("SharedUrlBloc: URL expansion failed or returned same URL, using original: $content");
+            finalUrl = content; // Genişletme başarısız olsa bile orijinal URL'i kullan
           }
         }
 
@@ -162,6 +166,18 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
   ) {
     _lastProcessedUrl = null; // URL'i temizle
     emit(const SharedUrlInitial());
+  }
+
+  void _onReemitLastUrl(
+    ReemitLastUrl event,
+    Emitter<SharedUrlState> emit,
+  ) {
+    if (state is SharedUrlReceived) {
+      final currentState = state as SharedUrlReceived;
+      print("SharedUrlBloc: Re-emitting last URL: ${currentState.url}");
+      // Yeni timestamp ile emit et
+      emit(SharedUrlReceived(currentState.url, timestamp: DateTime.now()));
+    }
   }
 
   @override

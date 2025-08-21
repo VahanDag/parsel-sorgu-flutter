@@ -37,3 +37,8 @@ class DismissInvalidUrlModal extends SharedUrlEvent {
 class ClearSharedUrl extends SharedUrlEvent {
   const ClearSharedUrl();
 }
+
+// Son URL'i yeniden emit et
+class ReemitLastUrl extends SharedUrlEvent {
+  const ReemitLastUrl();
+}
