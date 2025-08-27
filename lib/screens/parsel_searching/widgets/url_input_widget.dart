@@ -18,7 +18,7 @@ class UrlInputWidget extends StatelessWidget {
       controller: controller,
       style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
-        hintText: 'Sahibinden.com linkini buraya yapıştırın',
+        hintText: 'Arsa linkini buraya yapıştırın',
         prefixIcon: const Icon(Icons.link, size: 28),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(

@@ -130,7 +130,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
           iconBg: Colors.green[50]!,
           title: '1. Paylaşım ile (Önerilen)',
           subtitle: 'En hızlı yöntem',
-          steps: ['Sahibinden uygulamasında ilan açın', 'Paylaş (Share) butonuna dokunun', 'Parsel Sorgulama uygulamasını seçin', 'Otomatik olarak parsel sorgulanır ✨'],
+          steps: ['Arsanın paylaşıldığı uygulamadan ilanı açın', 'Paylaş (Share) butonuna dokunun', 'Parsel Sorgulama uygulamasını seçin', 'Otomatik olarak parsel sorgulanır ✨'],
         ),
 
         SizedBox(height: 20),
@@ -142,7 +142,7 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
           iconBg: Colors.blue[50]!,
           title: '2. Link ile Manuel',
           subtitle: 'Klasik yöntem',
-          steps: ['Sahibinden.com\'dan ilan linkini kopyalayın', 'Uygulamaya yapıştırın', '"Sayfayı Yükle" butonuna tıklayın', '"Parseli Sorgula" ile TKGM sorgusu yapın'],
+          steps: ['Emlak sitesindeki ilan linkini kopyalayın', 'Uygulamaya yapıştırın', '"Sayfayı Yükle" butonuna tıklayın', '"Parseli Sorgula" ile TKGM sorgusu yapın'],
         ),
       ],
     );
@@ -308,24 +308,11 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
                     style: TextStyle(fontSize: 14, color: Colors.grey[600], fontFamily: 'monospace'),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    // Örnek linki text field'a yapıştır
-                    setState(() {
-                      // _urlController.text = 'https://www.sahibinden.com/ilan/emlak-konut-satilik-ornek-ilan-123456789';
-                    });
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(6)),
-                    child: Icon(Icons.content_copy, size: 16, color: Colors.orange[600]),
-                  ),
-                ),
               ],
             ),
           ),
           SizedBox(height: 12),
-          Text('Bu örnek linki kullanarak uygulamayı test edebilirsiniz', style: TextStyle(fontSize: 13, color: Colors.orange[700])),
+          // Text('Bu örnek linki kullanarak uygulamayı test edebilirsiniz', style: TextStyle(fontSize: 13, color: Colors.orange[700])),
         ],
       ),
     );

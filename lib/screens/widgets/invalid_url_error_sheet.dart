@@ -57,7 +57,7 @@ Future showInvalidUrlBottomSheet({
 
               // Açıklama
               Text(
-                'Bu link parsel sorgulama için uygun değil.\n\nLütfen Sahibinden.com\'dan bir ilan linki paylaşın.',
+                'Bu link parsel sorgulama için uygun değil.\n\nLütfen desteklenen sitelerdeki ilan linki paylaşın.',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -92,7 +92,7 @@ Future showInvalidUrlBottomSheet({
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Doğru Link Örneği:',
+                          'Örnek Link Örneği:',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

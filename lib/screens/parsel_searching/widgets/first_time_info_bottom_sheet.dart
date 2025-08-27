@@ -50,9 +50,9 @@ class FirstTimeInfoBottomSheet extends StatelessWidget {
                   child: Text(
                     'İlk Kullanım Bilgisi',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                   ),
                 ),
               ],
@@ -90,10 +90,10 @@ class FirstTimeInfoBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'İlk aramada Sahibinden.com sitesi sizi mobil uygulamasına yönlendirebilir. Bu bizden kaynaklanan bir durum değil, sitenin kendi özelliğidir.',
+                    'İlk aramada arama yaptığınız emlak sitesi(örn: Sahibinden.com) sitesi sizi mobil uygulamasına yönlendirebilir. Bu bizden kaynaklanan bir durum değil, sitenin kendi özelliğidir.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      height: 1.4,
-                    ),
+                          height: 1.4,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Container(
@@ -117,13 +117,64 @@ class FirstTimeInfoBottomSheet extends StatelessWidget {
                           child: Text(
                             'Yönlendirme olursa lütfen uygulamaya geri dönüp "Sayfayı Yükle" butonuna tekrar basın.',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                         ),
                       ],
                     ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.red.shade200,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.gavel_rounded,
+                        color: Colors.red.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Sorumluluk Reddi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Bu uygulama TKGM veya herhangi bir devlet kurumunun resmi uygulaması değildir.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.red.shade800,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sadece kullanıcıları resmi TKGM web sitesine yönlendiren bir araçtır.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          height: 1.4,
+                          color: Colors.red.shade700,
+                        ),
                   ),
                 ],
               ),

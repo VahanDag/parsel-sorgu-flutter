@@ -366,6 +366,59 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                           }
                         },
                       ),
+
+                    // Sorumluluk reddi bölümü
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.red.shade200,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.gavel_rounded,
+                                color: Colors.red.shade700,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Sorumluluk Reddi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Bu uygulama TKGM veya herhangi bir devlet kurumunun resmi uygulaması değildir.',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              height: 1.4,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.red.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Sadece kullanıcıları resmi TKGM web sitesine yönlendiren bir araçtır.',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              height: 1.4,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
