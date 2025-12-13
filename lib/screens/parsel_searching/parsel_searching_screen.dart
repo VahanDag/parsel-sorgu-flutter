@@ -416,6 +416,46 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                               color: Colors.red.shade700,
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.link_rounded,
+                                color: Colors.red.shade700,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Resmi kaynak: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.red.shade700,
+                                ),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // TKGM sitesini açmak için
+                                    if (mounted) {
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/tkgm',
+                                        arguments: 'https://parselsorgu.tkgm.gov.tr',
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    'https://parselsorgu.tkgm.gov.tr',
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      decoration: TextDecoration.underline,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),

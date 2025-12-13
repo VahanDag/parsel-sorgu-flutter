@@ -27,6 +27,9 @@ This is a Flutter app called "Parsel Sorgulama" (Parcel Query) that helps users 
 
 ### Core Flow
 1. **Share Intent Handling**: App receives shared URLs from Sahibinden.com via `receive_sharing_intent` package
+   - Handles both cold starts (app closed) and warm starts (app running)
+   - SharedUrlBloc manages duplicate URL detection and validation
+   - Supports both sahibinden.com and shortened shbd.io URLs
 2. **URL Processing**: Expands shortened URLs (shbd.io) and validates Sahibinden.com links
 3. **Data Extraction**: Uses WebView with JavaScript injection to extract parcel data from Sahibinden pages
 4. **TKGM Integration**: Queries TKGM APIs to find administrative IDs and construct proper TKGM URLs
@@ -44,6 +47,7 @@ This is a Flutter app called "Parsel Sorgulama" (Parcel Query) that helps users 
 - **url_expander.dart**: Utility to expand shortened URLs (shbd.io → sahibinden.com)
 
 #### BLoC Architecture
+- **SharedUrlBloc**: Handles incoming shared URLs from other apps, validates Sahibinden/shbd.io links, manages URL expansion and duplicate detection
 - **ParselSearchingBloc**: Manages URL loading, data extraction, and WebView interactions
 - **TkgmBloc**: Handles TKGM page loading, location services, and parcel data processing
 
@@ -51,10 +55,13 @@ This is a Flutter app called "Parsel Sorgulama" (Parcel Query) that helps users 
 1. **SplashScreen** → 2. **ParselSearchingScreen** → 3. **TKGMWebViewScreen**
 
 ### Key Dependencies
-- `flutter_inappwebview: ^6.0.0` - WebView implementation for both URL loading and TKGM display
+- `flutter_inappwebview: ^6.1.4` - WebView implementation for both URL loading and TKGM display
 - `receive_sharing_intent: ^1.8.1` - Handle incoming shared URLs from other apps
 - `geolocator: ^13.0.0` - Location services for distance calculations
+- `permission_handler: ^11.3.1` - Runtime permissions for location access
+- `shared_preferences: ^2.3.2` - Local storage for first-time user experience flag
 - `http: ^1.4.0` - API calls to TKGM services
+- `url_launcher: ^6.3.2` - Opening external URLs
 - `html: ^0.15.6` - HTML parsing if needed
 - `flutter_bloc: ^8.1.6` - State management using BLoC pattern
 - `equatable: ^2.0.6` - Simplifies BLoC state comparisons
@@ -86,3 +93,8 @@ The app extracts parcel information from Sahibinden.com by:
 - Collapsible detail cards
 - WebView show/hide toggle
 - Material 3 design with custom theming
+- First-time user onboarding bottom sheet (shown once, stored in SharedPreferences)
+
+### Code Organization
+- Widgets organized in feature-specific folders (e.g., `lib/screens/parsel_searching/widgets/`, `lib/screens/tkgm/widgets/`)
+- **location_constants.dart**: Contains pre-loaded Turkish administrative geographic data (~1.1MB) for offline lookups
