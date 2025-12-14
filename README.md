@@ -179,4 +179,4 @@ Bu proje MIT lisansı altında yayınlanmıştır. Detaylar için `LICENSE` dosy
 ---
 
 **Sürüm:** 1.1.0
-**Son Güncelleme:** Aralık 2024
+**Son Güncelleme:** Aralık 2025
