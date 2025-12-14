@@ -138,7 +138,6 @@ Uygulama modüler bir mimari ile tasarlandığından, farklı emlak sitelerinin 
 
 - **Hepsiemlak.com** entegrasyonu
 - **Emlakjet.com** entegrasyonu
-- **Zingat.com** desteği
 - Diğer popüler emlak platformları
 
 Her yeni platform eklendikçe kullanıcılar uygulama içinden bilgilendirilecek ve otomatik olarak yeni özelliklere erişim sağlayacaktır.
@@ -167,10 +166,6 @@ Uygulama herhangi bir kullanıcı verisi toplamaz veya saklamaz. Tüm sorgular d
 ## Katkıda Bulunma
 
 Bu proje açık kaynak olarak geliştirilmektedir. Hata bildirimleri ve öneriler için GitHub üzerinden issue açabilirsiniz.
-
-## Lisans
-
-Bu proje MIT lisansı altında yayınlanmıştır. Detaylar için `LICENSE` dosyasına bakınız.
 
 ## Geliştirici
 
