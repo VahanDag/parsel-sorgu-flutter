@@ -27,7 +27,7 @@ class ParselWebViewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('ParselWebViewWidget build - showWebView: $showWebView, isLoading: $isLoading');
+    debugPrint('ParselWebViewWidget build - showWebView: $showWebView, isLoading: $isLoading');
     return Column(
       children: [
         if (isLoading) const LinearProgressIndicator(),
@@ -49,75 +49,72 @@ class ParselWebViewWidget extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: Builder(
               builder: (context) {
-                print('Creating InAppWebView widget');
+                debugPrint('Creating InAppWebView widget');
                 return InAppWebView(
-              initialSettings: InAppWebViewSettings(
-                // CRITICAL: JavaScript must be enabled
-                javaScriptEnabled: true,
+                  initialSettings: InAppWebViewSettings(
+                    // CRITICAL: JavaScript must be enabled
+                    javaScriptEnabled: true,
 
-                // CRITICAL FOR iOS: Disable App-Bound Domains restriction
-                limitsNavigationsToAppBoundDomains: false,
+                    // CRITICAL FOR iOS: Disable App-Bound Domains restriction
+                    limitsNavigationsToAppBoundDomains: false,
 
-                // iOS specific settings
-                allowsInlineMediaPlayback: true,
-                allowsBackForwardNavigationGestures: true,
-                allowsAirPlayForMediaPlayback: false,
-                allowsPictureInPictureMediaPlayback: false,
-                iframeAllowFullscreen: true,
-                applePayAPIEnabled: false,
+                    // iOS specific settings
+                    allowsInlineMediaPlayback: true,
+                    allowsBackForwardNavigationGestures: true,
+                    allowsAirPlayForMediaPlayback: false,
+                    allowsPictureInPictureMediaPlayback: false,
+                    iframeAllowFullscreen: true,
+                    applePayAPIEnabled: false,
 
-                // iOS WKWebView settings for JavaScript
-                javaScriptCanOpenWindowsAutomatically: true,
+                    // iOS WKWebView settings for JavaScript
+                    javaScriptCanOpenWindowsAutomatically: true,
 
-                // Android specific settings
-                domStorageEnabled: Platform.isAndroid,
-                databaseEnabled: Platform.isAndroid,
+                    // Android specific settings
+                    domStorageEnabled: Platform.isAndroid,
+                    databaseEnabled: Platform.isAndroid,
 
-                // Common settings - CloudFlare bypass için kritik
-                useShouldOverrideUrlLoading: false,
-                mediaPlaybackRequiresUserGesture: false,
-                supportZoom: true,
-                builtInZoomControls: false,
-                displayZoomControls: false,
-                useWideViewPort: true,
-                loadWithOverviewMode: true,
+                    // Common settings - CloudFlare bypass için
+                    useShouldOverrideUrlLoading: false,
+                    mediaPlaybackRequiresUserGesture: false,
+                    supportZoom: true,
+                    builtInZoomControls: false,
+                    displayZoomControls: false,
+                    useWideViewPort: true,
+                    loadWithOverviewMode: true,
 
-                // Cache ve cookie ayarları - CloudFlare bypass için kritik
-                cacheEnabled: true,
-                clearCache: false,
-                thirdPartyCookiesEnabled: true,
-                hardwareAcceleration: true,
+                    // Cache ve cookie ayarları - CloudFlare bypass için
+                    cacheEnabled: true,
+                    clearCache: false,
+                    thirdPartyCookiesEnabled: true,
+                    hardwareAcceleration: true,
 
-                // Security settings
-                mixedContentMode: Platform.isAndroid ? MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW : null,
+                    // Security settings
+                    mixedContentMode: Platform.isAndroid ? MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW : null,
 
-                // CloudFlare bypass için kritik ayarlar
-                disableVerticalScroll: false,
-                disableHorizontalScroll: false,
-                disableContextMenu: false,
-                verticalScrollBarEnabled: true,
-                horizontalScrollBarEnabled: true,
+                    // CloudFlare bypass için kritik ayarlar
+                    disableVerticalScroll: false,
+                    disableHorizontalScroll: false,
+                    disableContextMenu: false,
+                    verticalScrollBarEnabled: true,
+                    horizontalScrollBarEnabled: true,
 
-                // User Agent - CloudFlare tarafından mobile cihaz olarak algılanması için
-                // userAgent: Platform.isIOS
-                //   ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
-                //   : 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-              ),
-
-              onWebViewCreated: (controller) {
-                print('InAppWebView onWebViewCreated called');
-                onWebViewCreated(controller);
-              },
-              onLoadStart: onLoadStart,
-              onProgressChanged: onProgressChanged,
-              onLoadStop: onLoadStop,
-              onReceivedError: onReceivedError,
-              onReceivedHttpError: onReceivedHttpError,
-
-              // Console logging for debugging
-              onConsoleMessage: (controller, consoleMessage) {
-                print('Console: ${consoleMessage.message}');
-              },
+                    // User Agent - CloudFlare tarafından mobile cihaz olarak algılanması için
+                    // userAgent: Platform.isIOS
+                    //   ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
+                    //   : 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
+                  ),
+                  onWebViewCreated: (controller) {
+                    debugPrint('InAppWebView onWebViewCreated called');
+                    onWebViewCreated(controller);
+                  },
+                  onLoadStart: onLoadStart,
+                  onProgressChanged: onProgressChanged,
+                  onLoadStop: onLoadStop,
+                  onReceivedError: onReceivedError,
+                  onReceivedHttpError: onReceivedHttpError,
+                  onConsoleMessage: (controller, consoleMessage) {
+                    debugPrint('Console: ${consoleMessage.message}');
+                  },
                 );
               },
             ),

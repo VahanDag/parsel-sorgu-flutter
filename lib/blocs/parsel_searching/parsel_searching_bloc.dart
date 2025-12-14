@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:http/http.dart' as http;
@@ -41,14 +42,12 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
   void _onUrlChanged(UrlChangedEvent event, Emitter<ParselSearchingState> emit) {
     String processedUrl = event.url.trim();
-    
+
     // Eğer URL boş değilse ve http/https ile başlamıyorsa, https ekle
-    if (processedUrl.isNotEmpty && 
-        !processedUrl.startsWith('http://') && 
-        !processedUrl.startsWith('https://')) {
+    if (processedUrl.isNotEmpty && !processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
       processedUrl = 'https://$processedUrl';
     }
-    
+
     emit(state.copyWith(
       url: processedUrl,
       currentStep: 0,
@@ -99,7 +98,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       await _webViewController!.loadUrl(
         urlRequest: URLRequest(url: WebUri(event.url)),
       );
-      print("URL yükleme başlatıldı");
+      debugPrint("URL yükleme başlatıldı");
       // CloudFlare'ın tamamen yüklenmesi için herhangi bir işlem yapmıyoruz
       // onLoadStop callback'inde beklemeyi yapacağız
     } catch (e) {
@@ -176,7 +175,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
       // If first method fails, try alternative extraction
       if (result == null || result == 'null') {
-        print('Method 1 failed, trying alternative extraction...');
+        debugPrint('Method 1 failed, trying alternative extraction...');
 
         // Method 2: Try with window.pageTrackData
         result = await _webViewController!.evaluateJavascript(
@@ -232,7 +231,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
       // Method 3: iOS-specific approach - inject and wait
       if ((result == null || result == 'null') && Platform.isIOS) {
-        print('Trying iOS-specific extraction method...');
+        debugPrint('Trying iOS-specific extraction method...');
 
         // First inject a global function
         await _webViewController!.evaluateJavascript(
@@ -274,7 +273,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         );
       }
 
-      print('Extraction result: $result');
+      debugPrint('Extraction result: $result');
 
       if (result != null && result != 'null') {
         try {
@@ -282,7 +281,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
           // Check if we got an error
           if (data['error'] != null) {
-            print('JavaScript error: ${data['error']}');
+            debugPrint('JavaScript error: ${data['error']}');
             emit(state.copyWith(
               status: ParselSearchingStatus.error,
               errorMessage: 'Veri çıkarma hatası: ${data['error']}',
@@ -311,7 +310,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
             ));
           }
         } catch (e) {
-          print('JSON parse error: $e');
+          debugPrint('JSON parse error: $e');
           emit(state.copyWith(
             status: ParselSearchingStatus.error,
             errorMessage: 'Veri işleme hatası: ${e.toString()}',
@@ -327,7 +326,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         ));
       }
     } catch (e) {
-      print('General extraction error: $e');
+      debugPrint('General extraction error: $e');
       emit(state.copyWith(
         status: ParselSearchingStatus.error,
         errorMessage: 'Veri alınamadı: ${e.toString()}',
@@ -338,7 +337,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
   Future<void> _debugWebViewContent(Emitter<ParselSearchingState> emit) async {
     if (_webViewController == null) {
-      print('WebViewController is null');
+      debugPrint('WebViewController is null');
       return;
     }
 
@@ -347,17 +346,17 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       final jsEnabled = await _webViewController!.evaluateJavascript(
         source: 'typeof window !== "undefined"',
       );
-      print('JavaScript enabled: $jsEnabled');
+      debugPrint('JavaScript enabled: $jsEnabled');
 
       // 2. Get current URL
       final currentUrl = await _webViewController!.getUrl();
-      print('Current URL: $currentUrl');
+      debugPrint('Current URL: $currentUrl');
 
       // 3. Check page title
       final title = await _webViewController!.evaluateJavascript(
         source: 'document.title',
       );
-      print('Page title: $title');
+      debugPrint('Page title: $title');
 
       // 4. Check if pageTrackData exists
       final hasPageTrackData = await _webViewController!.evaluateJavascript(
@@ -372,7 +371,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
       ''',
       );
-      print('pageTrackData existence: $hasPageTrackData');
+      debugPrint('pageTrackData existence: $hasPageTrackData');
 
       // 5. List all global variables (to find where data might be)
       final globals = await _webViewController!.evaluateJavascript(
@@ -390,7 +389,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
       ''',
       );
-      print('Relevant global variables: $globals');
+      debugPrint('Relevant global variables: $globals');
 
       // 6. Check for data in data attributes
       final dataAttributes = await _webViewController!.evaluateJavascript(
@@ -408,7 +407,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
       ''',
       );
-      print('Data attributes found: $dataAttributes');
+      debugPrint('Data attributes found: $dataAttributes');
 
       // 7. Try to find the data in script tags
       final scriptContent = await _webViewController!.evaluateJavascript(
@@ -435,19 +434,19 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
       ''',
       );
-      print('Scripts with tracking data: $scriptContent');
+      debugPrint('Scripts with tracking data: $scriptContent');
 
       // 8. Check page readyState
       final readyState = await _webViewController!.evaluateJavascript(
         source: 'document.readyState',
       );
-      print('Document ready state: $readyState');
+      debugPrint('Document ready state: $readyState');
 
       // 9. iOS-specific: Check if we're in a frame
       final inFrame = await _webViewController!.evaluateJavascript(
         source: 'window.self !== window.top',
       );
-      print('In iframe: $inFrame');
+      debugPrint('In iframe: $inFrame');
 
       // 10. Try alternative data extraction paths
       final alternativeData = await _webViewController!.evaluateJavascript(
@@ -484,9 +483,9 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
       ''',
       );
-      print('Alternative data sources: $alternativeData');
+      debugPrint('Alternative data sources: $alternativeData');
     } catch (e) {
-      print('Debug error: $e');
+      debugPrint('Debug error: $e');
     }
   }
 
@@ -508,11 +507,11 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       int? ilId;
 
       for (var feature in ilData['features']) {
-        print("${feature['properties']['text'].toString().toLowerCase()} ${data['il'].toString().toLowerCase()}");
+        debugPrint("${feature['properties']['text'].toString().toLowerCase()} ${data['il'].toString().toLowerCase()}");
         if (feature['properties']['text'].toString().toLowerCase() == data['il'].toString().toLowerCase()) {
-          print(feature['properties']['id'].toString().runtimeType);
+          debugPrint("${feature['properties']['id'].toString().runtimeType}");
           ilId = int.tryParse(feature['properties']['id'].toString());
-          print("bitti il $ilId");
+          debugPrint("bitti il $ilId");
           break;
         }
       }
@@ -528,7 +527,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
           'Referer': 'https://parselsorgu.tkgm.gov.tr/',
         },
       );
-      print("veri çekildi ilce");
+      debugPrint("veri çekildi ilce");
 
       final ilceData = json.decode(ilceResponse.body);
       if (ilceData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
@@ -538,7 +537,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       for (var feature in ilceData['features']) {
         if (feature['properties']['text'].toString().toLowerCase() == data['ilce'].toString().toLowerCase()) {
           ilceId = int.tryParse(feature['properties']['id'].toString());
-          print("bitti ilce $ilceId");
+          debugPrint("bitti ilce $ilceId");
           break;
         }
       }
@@ -554,7 +553,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
           'Referer': 'https://parselsorgu.tkgm.gov.tr/',
         },
       );
-      print("veri çekildi mahalle");
+      debugPrint("veri çekildi mahalle");
       final mahalleData = json.decode(mahalleResponse.body);
       if (mahalleData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
 
@@ -565,19 +564,19 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       // İlk önce tam eşleşme ara
       for (var feature in mahalleData['features']) {
         final mahalleName = feature['properties']['text'].toString().toLowerCase();
-        print("$mahalleName $cleanMahalleName");
+        debugPrint("$mahalleName $cleanMahalleName");
 
         if (mahalleName == cleanMahalleName || mahalleName.contains(cleanMahalleName) || cleanMahalleName.contains(mahalleName)) {
-          print(feature['properties']['id'].toString());
+          debugPrint(feature['properties']['id'].toString());
           mahalleId = int.tryParse(feature['properties']['id'].toString());
-          print("bitti mahalleId (tam eşleşme) $mahalleId");
+          debugPrint("bitti mahalleId (tam eşleşme) $mahalleId");
           break;
         }
       }
 
       // Tam eşleşme bulunamazsa fuzzy matching ile ara
       if (mahalleId == null) {
-        print("Tam eşleşme bulunamadı, fuzzy matching başlatılıyor...");
+        debugPrint("Tam eşleşme bulunamadı, fuzzy matching başlatılıyor...");
         double bestSimilarity = 0.0;
         Map<String, dynamic>? bestMatch;
 
@@ -585,22 +584,22 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
           final mahalleName = feature['properties']['text'].toString().toLowerCase();
           final similarity = _calculateStringSimilarity(cleanMahalleName, mahalleName);
 
-          print("'$mahalleName' vs '$cleanMahalleName' => ${(similarity * 100).toStringAsFixed(1)}%");
+          debugPrint("'$mahalleName' vs '$cleanMahalleName' => ${(similarity * 100).toStringAsFixed(1)}%");
 
           // En az %60 benzerlik ve önceki en iyi eşleşmeden daha iyi ise
           if (similarity > 0.6 && similarity > bestSimilarity) {
             bestSimilarity = similarity;
             bestMatch = feature;
-            print("Yeni en iyi eşleşme: '$mahalleName' (${(bestSimilarity * 100).toStringAsFixed(1)}%)");
+            debugPrint("Yeni en iyi eşleşme: '$mahalleName' (${(bestSimilarity * 100).toStringAsFixed(1)}%)");
           }
         }
 
         if (bestMatch != null) {
           mahalleId = int.tryParse(bestMatch['properties']['id'].toString());
-          print("bitti mahalleId (fuzzy matching) $mahalleId - benzerlik: ${(bestSimilarity * 100).toStringAsFixed(1)}%");
-          print("Eşleşen: '${bestMatch['properties']['text']}' <- '$cleanMahalleName'");
+          debugPrint("bitti mahalleId (fuzzy matching) $mahalleId - benzerlik: ${(bestSimilarity * 100).toStringAsFixed(1)}%");
+          debugPrint("Eşleşen: '${bestMatch['properties']['text']}' <- '$cleanMahalleName'");
         } else {
-          print("Fuzzy matching ile de eşleşme bulunamadı (min %60 benzerlik gerekli)");
+          debugPrint("Fuzzy matching ile de eşleşme bulunamadı (min %60 benzerlik gerekli)");
         }
       }
 
@@ -618,7 +617,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         parselData: {...data, 'tkgmUrl': tkgmUrl},
       ));
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       emit(state.copyWith(
         status: ParselSearchingStatus.error,
         errorMessage: 'Konum bilgileri alınamadı: ${e.toString()}',
@@ -651,7 +650,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
     try {
       final currentUrl = await _webViewController?.getUrl();
-      print(currentUrl.toString());
+      debugPrint(currentUrl.toString());
       // Sahibinden.com sayfası değilse sadece yüklendi durumuna geç, parsel sorgula aktif olmasın
       if (currentUrl == null || !currentUrl.toString().contains('sahibinden.com')) {
         emit(state.copyWith(
@@ -701,12 +700,12 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         })();
         ''',
       );
-      print("pageContentCheck ${pageContentCheck.runtimeType}");
-      print("pageContentCheck content $pageContentCheck");
+      debugPrint("pageContentCheck ${pageContentCheck.runtimeType}");
+      debugPrint("pageContentCheck content $pageContentCheck");
 
       if (pageContentCheck != null && pageContentCheck.toString() != 'null') {
         Map<String, dynamic> contentData;
-        
+
         // Check if pageContentCheck is already a Map or if it's a String that needs decoding
         if (pageContentCheck is Map) {
           contentData = Map<String, dynamic>.from(pageContentCheck);
@@ -715,7 +714,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         } else {
           throw Exception('Unexpected data type: ${pageContentCheck.runtimeType}');
         }
-        
+
         final isCloudFlareChallenge = contentData['isCloudFlareChallenge'] == true;
         final hasPageTrackData = contentData['hasPageTrackData'] == true;
         final hasSahibindenContent = contentData['hasSahibindenContent'] == true;
@@ -769,7 +768,7 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
         ));
       }
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       // Hata durumunda buton pasif
       emit(state.copyWith(
         status: ParselSearchingStatus.loaded,

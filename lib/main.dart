@@ -10,6 +10,12 @@ import 'package:parsel_sorgu/screens/splash_screen.dart';
 
 part 'screens/widgets/invalid_url_error_sheet.dart';
 
+///
+/// Author: Vahan Dağ
+///
+/// 14.12.2025
+///
+
 void main() {
   runApp(const MyApp());
 }
@@ -98,9 +104,6 @@ class AppHome extends StatelessWidget {
       builder: (context, state) {
         return SplashScreen(
           nextScreen: ParselSearchScreen(),
-          // nextScreen: InAppWebView(
-          //   initialUrlRequest: URLRequest(url: WebUri("https://www.sahibinden.com/ilan/emlak-arsa-satilik-fiyat-dustu-ergene-misinlide-1-donum-hisse-imara-yakin-1257558338/detay")),
-          // ),
         );
       },
     );

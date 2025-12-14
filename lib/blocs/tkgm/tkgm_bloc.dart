@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:geolocator/geolocator.dart';
@@ -83,7 +84,7 @@ class TkgmBloc extends Bloc<TkgmEvent, TkgmState> {
 
       add(const FetchParselDataEvent());
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       emit(state.copyWith(
         status: TkgmStatus.error,
         errorMessage: 'Konum alınamadı}',

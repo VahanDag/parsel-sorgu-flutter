@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_event.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
@@ -25,27 +26,27 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
   }
 
   void _initializeSharedIntentListening() {
-    print("SharedUrlBloc: Initializing shared intent listening");
+    debugPrint("SharedUrlBloc: Initializing shared intent listening");
 
     // Uygulama açıkken gelen yeni paylaşımları dinle
     _intentSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
       (List<SharedMediaFile> value) {
-        print("SharedUrlBloc: Received media stream: ${value.length} items");
+        debugPrint("SharedUrlBloc: Received media stream: ${value.length} items");
         if (value.isNotEmpty) {
           final path = value.first.path;
-          print("SharedUrlBloc: Processing first media item: $path");
+          debugPrint("SharedUrlBloc: Processing first media item: $path");
 
           // Duplicate kontrolü - aynı URL tekrar geliyorsa işleme
           if (_lastProcessedUrl != path) {
             _lastProcessedUrl = path;
             add(SharedMediaReceived(value.first));
           } else {
-            print("SharedUrlBloc: Duplicate URL detected, skipping: $path");
+            debugPrint("SharedUrlBloc: Duplicate URL detected, skipping: $path");
           }
         }
       },
       onError: (error) {
-        print("SharedUrlBloc: Error in media stream: $error");
+        debugPrint("SharedUrlBloc: Error in media stream: $error");
         add(const ShowInvalidUrlModal());
       },
     );
@@ -56,26 +57,26 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
     Emitter<SharedUrlState> emit,
   ) async {
     try {
-      print("SharedUrlBloc: Initializing shared URL");
+      debugPrint("SharedUrlBloc: Initializing shared URL");
       emit(const SharedUrlProcessing());
 
       // Uygulama kapalıyken gelen ilk paylaşımı yakala
       final List<SharedMediaFile> initialMedia = await ReceiveSharingIntent.instance.getInitialMedia();
 
-      print("SharedUrlBloc: Initial media count: ${initialMedia.length}");
+      debugPrint("SharedUrlBloc: Initial media count: ${initialMedia.length}");
       if (initialMedia.isNotEmpty) {
         final path = initialMedia.first.path;
-        print("SharedUrlBloc: Processing initial media: $path");
+        debugPrint("SharedUrlBloc: Processing initial media: $path");
         _lastProcessedUrl = path; // URL'i kaydet
         await _processSharedMedia(initialMedia.first, emit);
         // Intent'i temizle
         ReceiveSharingIntent.instance.reset();
       } else {
-        print("SharedUrlBloc: No initial media, staying in initial state");
+        debugPrint("SharedUrlBloc: No initial media, staying in initial state");
         emit(const SharedUrlInitial());
       }
     } catch (e) {
-      print("SharedUrlBloc: Error during initialization: $e");
+      debugPrint("SharedUrlBloc: Error during initialization: $e");
       emit(SharedUrlError('Paylaşım verisi alınamadı: $e'));
     }
   }
@@ -84,7 +85,7 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
     SharedMediaReceived event,
     Emitter<SharedUrlState> emit,
   ) async {
-    print("SharedUrlBloc: Shared media received: ${event.media.path}");
+    debugPrint("SharedUrlBloc: Shared media received: ${event.media.path}");
 
     // Processing state'i emit et
     emit(const SharedUrlProcessing());
@@ -101,46 +102,46 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
   ) async {
     try {
       final content = media.path;
-      print("SharedUrlBloc: Processing content: $content");
+      debugPrint("SharedUrlBloc: Processing content: $content");
 
       if (content.contains('sahibinden.com') || content.contains('shbd.io')) {
-        print("SharedUrlBloc: Valid URL domain detected");
+        debugPrint("SharedUrlBloc: Valid URL domain detected");
         String finalUrl = content;
 
         // Kısaltılmış URL ise genişlet
         if (content.contains('shbd.io')) {
-          print("SharedUrlBloc: Expanding short URL");
+          debugPrint("SharedUrlBloc: Expanding short URL");
           final expandedUrl = await UrlExpander.expandUrl(content);
           if (expandedUrl != null && expandedUrl != content) {
             finalUrl = expandedUrl;
-            print("SharedUrlBloc: URL expanded to: $finalUrl");
+            debugPrint("SharedUrlBloc: URL expanded to: $finalUrl");
           } else {
-            print("SharedUrlBloc: URL expansion failed or returned same URL, using original: $content");
+            debugPrint("SharedUrlBloc: URL expansion failed or returned same URL, using original: $content");
             finalUrl = content; // Genişletme başarısız olsa bile orijinal URL'i kullan
           }
         }
 
-        print("SharedUrlBloc: Emitting SharedUrlReceived with URL: $finalUrl");
+        debugPrint("SharedUrlBloc: Emitting SharedUrlReceived with URL: $finalUrl");
 
         // Timestamp ekleyerek her zaman farklı bir state olmasını sağla
         emit(SharedUrlReceived(finalUrl, timestamp: DateTime.now()));
 
         // State'in başarıyla emit edildiğini kontrol et
-        print("SharedUrlBloc: Current state after emit: ${state.runtimeType}");
+        debugPrint("SharedUrlBloc: Current state after emit: ${state.runtimeType}");
       } else {
-        print("SharedUrlBloc: Invalid URL - emitting SharedUrlInvalid");
+        debugPrint("SharedUrlBloc: Invalid URL - emitting SharedUrlInvalid");
         // Geçersiz URL - modal göster
         emit(const SharedUrlInvalid());
 
         // Callback varsa ve modal henüz gösterilmemişse çağır
         if (onInvalidUrl != null && !_modalShown) {
-          print("SharedUrlBloc: Calling onInvalidUrl callback");
+          debugPrint("SharedUrlBloc: Calling onInvalidUrl callback");
           _modalShown = true;
           onInvalidUrl!();
         }
       }
     } catch (e) {
-      print("SharedUrlBloc: Error processing shared media: $e");
+      debugPrint("SharedUrlBloc: Error processing shared media: $e");
       emit(SharedUrlError('URL işlenirken hata oluştu: $e'));
     }
   }
@@ -174,7 +175,7 @@ class SharedUrlBloc extends Bloc<SharedUrlEvent, SharedUrlState> {
   ) {
     if (state is SharedUrlReceived) {
       final currentState = state as SharedUrlReceived;
-      print("SharedUrlBloc: Re-emitting last URL: ${currentState.url}");
+      debugPrint("SharedUrlBloc: Re-emitting last URL: ${currentState.url}");
       // Yeni timestamp ile emit et
       emit(SharedUrlReceived(currentState.url, timestamp: DateTime.now()));
     }

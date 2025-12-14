@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_bloc.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_event.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_state.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_bloc.dart';
-import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_event.dart';
+import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/action_buttons_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/control_buttons_widget.dart';
@@ -21,6 +20,7 @@ import 'package:parsel_sorgu/screens/parsel_searching/widgets/status_message_wid
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/step_indicator_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/url_input_widget.dart';
 import 'package:parsel_sorgu/screens/tkgm/tkgm_webview_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ParselSearchScreen extends StatefulWidget {
   const ParselSearchScreen({super.key});
@@ -69,7 +69,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sharedUrlBloc = context.read<SharedUrlBloc>();
       if (sharedUrlBloc.state is SharedUrlReceived) {
-        print("ParselSearchingScreen: Found existing SharedUrlReceived state, re-emitting");
+        debugPrint("ParselSearchingScreen: Found existing SharedUrlReceived state, re-emitting");
         sharedUrlBloc.add(const ReemitLastUrl());
       }
     });
@@ -78,7 +78,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
   Future<void> _checkFirstTimeUser() async {
     final prefs = await SharedPreferences.getInstance();
     final hasShownInfo = prefs.getBool(_firstTimeInfoShownKey) ?? false;
-    
+
     if (!hasShownInfo && mounted) {
       // Ekran tamamen yüklendikten sonra bottom sheet'i göster
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -150,7 +150,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
           BlocListener<SharedUrlBloc, SharedUrlState>(
             listener: (context, state) {
               if (state is SharedUrlReceived) {
-                print("SharedUrlBloc: URL received = ${state.url}");
+                debugPrint("SharedUrlBloc: URL received = ${state.url}");
                 // Önce mevcut state'i temizle (önceki parsel data'sını sil)
                 context.read<ParselSearchingBloc>().add(const ClearUrlEvent());
                 // URL'yi ParselSearchingBloc'a gönder ve text controller'a set et
@@ -158,11 +158,11 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                 _urlController.text = state.url;
                 _shouldAutoLoad = true;
                 _pendingUrl = state.url; // URL'i güvenli bir şekilde sakla
-                
+
                 // iOS'ta WebView oluşturulmadıysa, biraz bekleyip manuel trigger yapalım
                 Future.delayed(const Duration(seconds: 2), () {
                   if (mounted && _shouldAutoLoad && _pendingUrl != null) {
-                    print("iOS fallback: Manuel LoadUrlEvent tetikleniyor");
+                    debugPrint("iOS fallback: Manuel LoadUrlEvent tetikleniyor");
                     context.read<ParselSearchingBloc>().add(LoadUrlEvent(_pendingUrl!));
                     _shouldAutoLoad = false;
                     _pendingUrl = null;
@@ -297,46 +297,47 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                         isLoading: state.isLoading,
                         onWebViewCreated: (controller) {
                           context.read<ParselSearchingBloc>().setWebViewController(controller);
-                          print('WebView oluşturuldu');
-                          print('_shouldAutoLoad: $_shouldAutoLoad');
-                          print('state.url: ${state.url}');
-                          print('state.url.isNotEmpty: ${state.url.isNotEmpty}');
-                          print('_urlController.text: ${_urlController.text}');
-                          print('_urlController.text.isNotEmpty: ${_urlController.text.isNotEmpty}');
+                          debugPrint('WebView oluşturuldu');
+                          debugPrint('_shouldAutoLoad: $_shouldAutoLoad');
+                          debugPrint('state.url: ${state.url}');
+                          debugPrint('state.url.isNotEmpty: ${state.url.isNotEmpty}');
+                          debugPrint('_urlController.text: ${_urlController.text}');
+                          debugPrint('_urlController.text.isNotEmpty: ${_urlController.text.isNotEmpty}');
 
                           // WebView hazır olduğunda otomatik yükleme yap
                           if (_shouldAutoLoad && _pendingUrl != null && _pendingUrl!.isNotEmpty) {
-                            print('Otomatik yükleme başlatılıyor: $_pendingUrl');
+                            debugPrint('Otomatik yükleme başlatılıyor: $_pendingUrl');
                             _shouldAutoLoad = false;
                             final urlToLoad = _pendingUrl!;
                             _pendingUrl = null;
                             Future.delayed(const Duration(milliseconds: 500), () {
                               if (mounted) {
-                                print('LoadUrlEvent tetikleniyor: $urlToLoad');
+                                debugPrint('LoadUrlEvent tetikleniyor: $urlToLoad');
                                 context.read<ParselSearchingBloc>().add(LoadUrlEvent(urlToLoad));
                               }
                             });
                           } else {
-                            print('Otomatik yükleme şartları sağlanmadı - _shouldAutoLoad: $_shouldAutoLoad, _pendingUrl: $_pendingUrl, _urlController.text: ${_urlController.text}');
+                            debugPrint(
+                                'Otomatik yükleme şartları sağlanmadı - _shouldAutoLoad: $_shouldAutoLoad, _pendingUrl: $_pendingUrl, _urlController.text: ${_urlController.text}');
                           }
                         },
                         onLoadStart: (controller, url) {
                           final urlString = url.toString();
                           if (urlString.startsWith('http') && urlString != _lastProcessedUrl) {
-                            print('Yükleme başladı: $url');
+                            debugPrint('Yükleme başladı: $url');
                             context.read<ParselSearchingBloc>().add(WebViewLoadStartEvent(urlString));
                           }
                         },
                         onProgressChanged: (controller, progress) {
                           // Sadece önemli progress güncellemelerini logla (0, 50, 100)
                           if (progress == 0 || progress == 50 || progress == 100) {
-                            print('Yükleme ilerlemesi: $progress%');
+                            debugPrint('Yükleme ilerlemesi: $progress%');
                           }
                         },
                         onLoadStop: (controller, url) {
                           final urlString = url.toString();
                           if (urlString.startsWith('http')) {
-                            print('Yükleme tamamlandı: $url');
+                            debugPrint('Yükleme tamamlandı: $url');
                             _lastProcessedUrl = urlString;
                             context.read<ParselSearchingBloc>().add(WebViewLoadStopEvent(urlString));
                           }
@@ -345,23 +346,23 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                           final requestUrl = request.url.toString();
                           // Sadece HTTP/HTTPS URL'lerde ve önemli hatalarda log yap
                           if ((requestUrl.startsWith('http://') || requestUrl.startsWith('https://')) && !requestUrl.contains('favicon.ico') && !requestUrl.contains('sahibinden://')) {
-                            print('WebView hatası: ${error.description} - URL: ${request.url}');
+                            debugPrint('WebView hatası: ${error.description} - URL: ${request.url}');
                             context.read<ParselSearchingBloc>().add(WebViewLoadErrorEvent(error.description));
                           }
                         },
                         onReceivedHttpError: (controller, request, errorResponse) {
                           final requestUrl = request.url.toString();
                           final statusCode = errorResponse.statusCode;
-                          
+
                           // CloudFlare 403 hatalarını ignore et - bunlar normal CloudFlare challenge'ları
                           if (statusCode == 403 && (requestUrl.contains('secure.sahibinden.com') || requestUrl.contains('checkLoading'))) {
-                            print('CloudFlare challenge algılandı: $statusCode - URL: ${request.url}');
+                            debugPrint('CloudFlare challenge algılandı: $statusCode - URL: ${request.url}');
                             return; // Error event göndermiyoruz
                           }
-                          
+
                           // Diğer kritik hataları sadece ana domain için logla
                           if (statusCode != null && statusCode >= 500 && requestUrl.contains('www.sahibinden.com') && !requestUrl.contains('favicon.ico')) {
-                            print('Kritik HTTP hatası: $statusCode - URL: ${request.url}');
+                            debugPrint('Kritik HTTP hatası: $statusCode - URL: ${request.url}');
                             context.read<ParselSearchingBloc>().add(WebViewLoadErrorEvent('Sunucu hatası: $statusCode'));
                           }
                         },
@@ -403,18 +404,18 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                           Text(
                             'Bu uygulama TKGM veya herhangi bir devlet kurumunun resmi uygulaması değildir.',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              height: 1.4,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.red.shade800,
-                            ),
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.red.shade800,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Sadece kullanıcıları resmi TKGM web sitesine yönlendiren bir araçtır.',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              height: 1.4,
-                              color: Colors.red.shade700,
-                            ),
+                                  height: 1.4,
+                                  color: Colors.red.shade700,
+                                ),
                           ),
                           const SizedBox(height: 12),
                           Row(
