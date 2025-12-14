@@ -11,7 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-.CLAUDE.md
+CLAUDE.md
 .claude/
 .vscode/
 
