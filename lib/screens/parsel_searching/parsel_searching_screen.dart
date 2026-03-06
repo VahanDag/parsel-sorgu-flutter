@@ -20,6 +20,8 @@ import 'package:parsel_sorgu/screens/parsel_searching/widgets/status_message_wid
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/step_indicator_widget.dart';
 import 'package:parsel_sorgu/screens/parsel_searching/widgets/url_input_widget.dart';
 import 'package:parsel_sorgu/screens/tkgm/tkgm_webview_screen.dart';
+import 'package:parsel_sorgu/screens/widgets/banner_ad_widget.dart';
+import 'package:parsel_sorgu/core/ad_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ParselSearchScreen extends StatefulWidget {
@@ -211,7 +213,10 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
           builder: (context, state) {
             return GestureDetector(
               onTap: () => FocusNode().unfocus(),
-              child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
                 child: Column(
                   children: [
                     // Üst kısım - Input ve butonlar
@@ -462,6 +467,12 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                     ),
                   ],
                 ),
+              ),
+                  ),
+
+                  // Sticky bottom banner reklam
+                  BannerAdWidget(adUnitId: AdHelper.parselSearchBannerAdUnitId),
+                ],
               ),
             );
           },

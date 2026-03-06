@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class UrlInputWidget extends StatelessWidget {
   final TextEditingController controller;
@@ -11,6 +12,16 @@ class UrlInputWidget extends StatelessWidget {
     required this.onClear,
     required this.onChanged,
   });
+
+  Future<void> _pasteFromClipboard() async {
+    final clipboardData = await Clipboard.getData('text/plain');
+    if (clipboardData?.text != null && clipboardData!.text!.isNotEmpty) {
+      controller.text = clipboardData.text!;
+      controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: controller.text.length),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +36,10 @@ class UrlInputWidget extends StatelessWidget {
                 icon: const Icon(Icons.clear),
                 onPressed: onClear,
               )
-            : null,
+            : IconButton(
+                icon: const Icon(Icons.content_paste_rounded),
+                onPressed: _pasteFromClipboard,
+              ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey.shade50,

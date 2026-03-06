@@ -100,6 +100,7 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
                 searchFunction: LocationConstants.searchProvinces,
                 onSelected: _onProvinceSelected,
                 selectedValue: _selectedProvince,
+                itemPrefix: (province) => LocationConstants.getPlateNumber(province).toString().padLeft(2, '0'),
               ),
             ),
             const SizedBox(height: 12),
@@ -253,6 +254,7 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
     required List<String> Function(String) searchFunction,
     required Function(String) onSelected,
     required String? selectedValue,
+    String Function(String)? itemPrefix,
   }) {
     _searchController.clear();
     _filteredItems = items;
@@ -343,7 +345,21 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
                           final item = _filteredItems[index];
                           final isSelected = item == selectedValue;
 
+                          final prefix = itemPrefix?.call(item);
                           return ListTile(
+                            leading: prefix != null
+                                ? SizedBox(
+                                    width: 32,
+                                    child: Text(
+                                      prefix,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  )
+                                : null,
                             title: Text(
                               item,
                               style: TextStyle(

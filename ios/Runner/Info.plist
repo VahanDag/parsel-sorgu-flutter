@@ -78,6 +78,71 @@
 		<!-- Do NOT include WKAppBoundDomains at all -->
 		<!-- This restriction causes JavaScript execution issues -->
 
+		<!-- AdMob App ID -->
+		<key>GADApplicationIdentifier</key>
+		<string>ca-app-pub-6142015479722071~7926224180</string>
+
+		<!-- SKAdNetwork for AdMob -->
+		<key>SKAdNetworkItems</key>
+		<array>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>cstr6suwn9.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>4fzdc2evr5.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>4pfyvq9l8r.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>2fnua5tdw4.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>ydx93a7ass.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>5a6flpkh64.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>p78ahlhber.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>v72qych5uu.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>ludvb6z3bs.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>cp8zw746q7.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>3sh42y64q3.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>c6k4g5qg8m.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>s39g8k73mm.skadnetwork</string>
+			</dict>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>3rd42ekr43.skadnetwork</string>
+			</dict>
+		</array>
+
 		<!-- User Activity Types -->
 		<key>NSUserActivityTypes</key>
 		<array>

@@ -735,13 +735,16 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
             }
           });
         } else if (hasPageTrackData && hasSahibindenContent) {
-          // Gerçek sayfa içeriği var - buton aktif
+          // Gerçek sayfa içeriği var - otomatik olarak veri çıkar
           emit(state.copyWith(
             status: ParselSearchingStatus.loaded,
-            statusMessage: 'Sayfa yüklendi! Parseli sorgulamak için butona tıklayın.',
+            statusMessage: 'Sayfa yüklendi! Parsel bilgileri otomatik alınıyor...',
             currentStep: 1,
             isCloudFlareChallenge: false,
           ));
+
+          // Otomatik olarak veri çıkarma işlemini başlat
+          add(const ExtractDataEvent());
         } else {
           // Henüz tam yüklenmemiş - buton pasif
           emit(state.copyWith(

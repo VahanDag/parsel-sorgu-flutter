@@ -22,6 +22,7 @@ dependencies:
   equatable: ^2.0.6
   permission_handler: ^11.3.1
   shared_preferences: ^2.3.2
+  google_mobile_ads: ^6.0.0
 
 dev_dependencies:
   flutter_test:

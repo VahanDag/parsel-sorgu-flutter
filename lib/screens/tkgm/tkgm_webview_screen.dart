@@ -8,6 +8,8 @@ import 'package:parsel_sorgu/blocs/tkgm/tkgm_event.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_state.dart';
 import 'package:parsel_sorgu/screens/tkgm/widgets/location_loading_indicator_widget.dart';
 import 'package:parsel_sorgu/screens/tkgm/widgets/parsel_details_card_widget.dart';
+import 'package:parsel_sorgu/screens/widgets/banner_ad_widget.dart';
+import 'package:parsel_sorgu/core/ad_helper.dart';
 
 class TKGMWebViewScreen extends StatefulWidget {
   final String url;
@@ -126,6 +128,8 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
                       },
                     ),
                   ),
+                  // Bottom banner reklam
+                  BannerAdWidget(adUnitId: AdHelper.tkgmBannerAdUnitId),
                 ],
               ),
 
