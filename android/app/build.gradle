@@ -14,15 +14,15 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.vahandag.parsel_sorgu"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11  // VERSION_1_8 yerine VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11  // VERSION_1_8 yerine VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '11'  // JavaVersion.VERSION_1_8 yerine '11'
+        jvmTarget = '17'
     }
 
     defaultConfig {
