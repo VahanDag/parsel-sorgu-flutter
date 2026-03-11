@@ -62,6 +62,8 @@
 		<!-- Location Permission -->
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Parsel ile aranızdaki mesafeyi ölçmemiz için konum izninize ihtiyacımız var.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Parsel ile aranızdaki mesafeyi ölçmemiz için konum izninize ihtiyacımız var.</string>
 
 		<!-- App Transport Security Settings -->
 		<key>NSAppTransportSecurity</key>
