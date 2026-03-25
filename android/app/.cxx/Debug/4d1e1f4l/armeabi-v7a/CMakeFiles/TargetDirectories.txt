@@ -1,0 +1,2 @@
+/Users/vahandag/Desktop/vahan/Flutter/parsel_sorgu/android/app/.cxx/Debug/4d1e1f4l/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/vahandag/Desktop/vahan/Flutter/parsel_sorgu/android/app/.cxx/Debug/4d1e1f4l/armeabi-v7a/CMakeFiles/rebuild_cache.dir
