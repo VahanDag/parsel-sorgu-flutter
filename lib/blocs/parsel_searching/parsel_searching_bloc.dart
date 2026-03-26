@@ -531,6 +531,9 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
 
       final ilceData = json.decode(ilceResponse.body);
       if (ilceData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
+      if (ilceData is! Map || ilceData['features'] == null) {
+        throw Exception('TKGM servisleri şu anda yanıt vermiyor. Lütfen daha sonra tekrar deneyin.');
+      }
 
       int? ilceId;
 
@@ -556,6 +559,9 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       debugPrint("veri çekildi mahalle");
       final mahalleData = json.decode(mahalleResponse.body);
       if (mahalleData.toString().contains("limit")) throw Exception("Günlük sorgu limitini aştınız");
+      if (mahalleData is! Map || mahalleData['features'] == null) {
+        throw Exception('TKGM servisleri şu anda yanıt vermiyor. Lütfen daha sonra tekrar deneyin.');
+      }
 
       int? mahalleId;
 
@@ -620,8 +626,8 @@ class ParselSearchingBloc extends Bloc<ParselSearchingEvent, ParselSearchingStat
       debugPrint(e.toString());
       emit(state.copyWith(
         status: ParselSearchingStatus.error,
-        errorMessage: 'Konum bilgileri alınamadı: ${e.toString()}',
-        statusMessage: 'TKGM sorgu hatası ${e.toString().contains("limit") ? ': Günlük sorgu limitini aştınız' : ''}',
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+        statusMessage: 'TKGM sorgu hatası',
       ));
     }
   }
