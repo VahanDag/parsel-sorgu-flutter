@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:parsel_sorgu/blocs/history/history_bloc.dart';
 import 'package:parsel_sorgu/blocs/parsel_searching/parsel_searching_bloc.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_bloc.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_event.dart';
 import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
-import 'package:parsel_sorgu/screens/parsel_searching/parsel_searching_screen.dart';
+import 'package:parsel_sorgu/screens/main_shell_screen.dart';
 import 'package:parsel_sorgu/screens/splash_screen.dart';
 
 part 'screens/widgets/invalid_url_error_sheet.dart';
@@ -71,6 +72,9 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<TkgmBloc>(
           create: (context) => TkgmBloc(),
         ),
+        BlocProvider<HistoryBloc>(
+          create: (context) => HistoryBloc(),
+        ),
       ],
       child: MaterialApp(
         navigatorKey: navigatorKey,
@@ -106,7 +110,7 @@ class AppHome extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         return SplashScreen(
-          nextScreen: ParselSearchScreen(),
+          nextScreen: const MainShellScreen(),
         );
       },
     );

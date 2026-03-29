@@ -199,7 +199,10 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                       MaterialPageRoute(
                         builder: (context) => BlocProvider(
                           create: (context) => TkgmBloc(),
-                          child: TKGMWebViewScreen(url: state.parselData!['tkgmUrl']),
+                          child: TKGMWebViewScreen(
+                            url: state.parselData!['tkgmUrl'],
+                            parselData: state.parselData,
+                          ),
                         ),
                       ),
                     );
