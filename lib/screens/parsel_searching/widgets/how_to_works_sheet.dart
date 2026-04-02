@@ -116,6 +116,18 @@ class _HowItWorksContentsState extends State<HowItWorksContents> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Tutorial GIF
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset(
+            'assets/tutorial/tutorial.gif',
+            width: double.infinity,
+            fit: BoxFit.fitWidth,
+          ),
+        ),
+
+        SizedBox(height: 20),
+
         Text(
           'Nasıl Kullanılır?',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey[800]),

@@ -83,12 +83,13 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
 
     if (!hasShownInfo && mounted) {
       // Ekran tamamen yüklendikten sonra bottom sheet'i göster
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (mounted) {
-          FirstTimeInfoBottomSheet.show(context, () async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setBool(_firstTimeInfoShownKey, true);
-          });
+          // Flag'i hemen kaydet - bottom sheet nasıl kapatılırsa kapatılsın tekrar gösterilmesin
+          await prefs.setBool(_firstTimeInfoShownKey, true);
+          if (mounted) {
+            FirstTimeInfoBottomSheet.show(context, () {});
+          }
         }
       });
     }

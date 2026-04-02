@@ -51,6 +51,9 @@ class ParselWebViewWidget extends StatelessWidget {
               builder: (context) {
                 debugPrint('Creating InAppWebView widget');
                 return InAppWebView(
+                  initialData: InAppWebViewInitialData(
+                    data: '<html><body style="background-color:#F5F5F5;"></body></html>',
+                  ),
                   initialSettings: InAppWebViewSettings(
                     // CRITICAL: JavaScript must be enabled
                     javaScriptEnabled: true,

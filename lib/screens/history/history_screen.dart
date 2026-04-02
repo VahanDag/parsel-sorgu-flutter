@@ -5,6 +5,8 @@ import 'package:parsel_sorgu/blocs/history/history_event.dart';
 import 'package:parsel_sorgu/blocs/history/history_state.dart';
 import 'package:parsel_sorgu/screens/history/history_detail_screen.dart';
 import 'package:parsel_sorgu/screens/history/widgets/history_list_item_widget.dart';
+import 'package:parsel_sorgu/screens/widgets/banner_ad_widget.dart';
+import 'package:parsel_sorgu/core/ad_helper.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -67,65 +69,72 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<HistoryBloc, HistoryState>(
-        builder: (context, state) {
-          if (state.status == HistoryStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          Expanded(
+            child: BlocBuilder<HistoryBloc, HistoryState>(
+              builder: (context, state) {
+                if (state.status == HistoryStatus.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (state.entries.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Henüz geçmiş yok',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.grey.shade600,
+                if (state.entries.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.history,
+                          size: 64,
+                          color: Colors.grey.shade400,
                         ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Parsel sorguladığınızda burada görünecek',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade500,
+                        const SizedBox(height: 16),
+                        Text(
+                          'Henüz geçmiş yok',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.grey.shade600,
+                              ),
                         ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: state.entries.length,
-            itemBuilder: (context, index) {
-              final entry = state.entries[index];
-              return HistoryListItemWidget(
-                entry: entry,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HistoryDetailScreen(entry: entry),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Parsel sorguladığınızda burada görünecek',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey.shade500,
+                              ),
+                        ),
+                      ],
                     ),
                   );
-                },
-                onDelete: () {
-                  context
-                      .read<HistoryBloc>()
-                      .add(DeleteHistoryEntryEvent(entry.id));
-                },
-              );
-            },
-          );
-        },
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: state.entries.length,
+                  itemBuilder: (context, index) {
+                    final entry = state.entries[index];
+                    return HistoryListItemWidget(
+                      entry: entry,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HistoryDetailScreen(entry: entry),
+                          ),
+                        );
+                      },
+                      onDelete: () {
+                        context
+                            .read<HistoryBloc>()
+                            .add(DeleteHistoryEntryEvent(entry.id));
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          BannerAdWidget(adUnitId: AdHelper.historyBannerAdUnitId),
+        ],
       ),
     );
   }

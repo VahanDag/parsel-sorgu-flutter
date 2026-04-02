@@ -338,49 +338,27 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
 
                     // List
                     Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: _filteredItems.length,
-                        itemBuilder: (context, index) {
-                          final item = _filteredItems[index];
-                          final isSelected = item == selectedValue;
-
-                          final prefix = itemPrefix?.call(item);
-                          return ListTile(
-                            leading: prefix != null
-                                ? SizedBox(
-                                    width: 32,
-                                    child: Text(
-                                      prefix,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                            title: Text(
-                              item,
-                              style: TextStyle(
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                color: isSelected ? Theme.of(context).primaryColor : null,
-                              ),
+                      child: _filteredItems.length > 15 && itemPrefix == null
+                          ? _buildGroupedList(
+                              scrollController: scrollController,
+                              items: _filteredItems,
+                              selectedValue: selectedValue,
+                              onSelected: onSelected,
+                              itemPrefix: itemPrefix,
+                            )
+                          : ListView.builder(
+                              controller: scrollController,
+                              itemCount: _filteredItems.length,
+                              itemBuilder: (context, index) {
+                                final item = _filteredItems[index];
+                                return _buildListItem(
+                                  item: item,
+                                  isSelected: item == selectedValue,
+                                  prefix: itemPrefix?.call(item),
+                                  onSelected: onSelected,
+                                );
+                              },
                             ),
-                            trailing: isSelected
-                                ? const Icon(
-                                    Icons.check,
-                                    color: Colors.green,
-                                    size: 20,
-                                  )
-                                : null,
-                            onTap: () {
-                              onSelected(item);
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
@@ -389,6 +367,100 @@ class _ManualSearchWidgetState extends State<ManualSearchWidget> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildListItem({
+    required String item,
+    required bool isSelected,
+    required String? prefix,
+    required Function(String) onSelected,
+  }) {
+    return ListTile(
+      leading: prefix != null
+          ? SizedBox(
+              width: 32,
+              child: Text(
+                prefix,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            )
+          : null,
+      title: Text(
+        item,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          color: isSelected ? Theme.of(context).primaryColor : null,
+        ),
+      ),
+      trailing: isSelected
+          ? const Icon(
+              Icons.check,
+              color: Colors.green,
+              size: 20,
+            )
+          : null,
+      onTap: () {
+        onSelected(item);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget _buildGroupedList({
+    required ScrollController scrollController,
+    required List<String> items,
+    required String? selectedValue,
+    required Function(String) onSelected,
+    required String Function(String)? itemPrefix,
+  }) {
+    // Harf gruplarına ayır
+    final Map<String, List<String>> grouped = {};
+    for (final item in items) {
+      final letter = item.isNotEmpty ? item[0].toUpperCase() : '#';
+      grouped.putIfAbsent(letter, () => []).add(item);
+    }
+
+    final sortedLetters = grouped.keys.toList();
+
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: sortedLetters.length,
+      itemBuilder: (context, sectionIndex) {
+        final letter = sortedLetters[sectionIndex];
+        final sectionItems = grouped[letter]!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Harf başlığı
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: Colors.grey.shade100,
+              child: Text(
+                letter,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+            // O harfteki öğeler
+            ...sectionItems.map((item) => _buildListItem(
+                  item: item,
+                  isSelected: item == selectedValue,
+                  prefix: itemPrefix?.call(item),
+                  onSelected: onSelected,
+                )),
+          ],
+        );
+      },
     );
   }
 }

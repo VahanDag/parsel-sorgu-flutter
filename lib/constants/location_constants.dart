@@ -52755,20 +52755,41 @@ class LocationConstants {
     ],
   };
 
+  // Türkçe alfabe sıralaması
+  static const String _turkishAlphabet = 'AaBbCcÇçDdEeFfGgĞğHhIıİiJjKkLlMmNnOoÖöPpRrSsŞşTtUuÜüVvYyZz';
+
+  static int _turkishCompare(String a, String b) {
+    final upperA = a.toUpperCase();
+    final upperB = b.toUpperCase();
+    final len = upperA.length < upperB.length ? upperA.length : upperB.length;
+    for (var i = 0; i < len; i++) {
+      final idxA = _turkishAlphabet.indexOf(upperA[i]);
+      final idxB = _turkishAlphabet.indexOf(upperB[i]);
+      final orderA = idxA == -1 ? upperA[i].codeUnitAt(0) + 1000 : idxA;
+      final orderB = idxB == -1 ? upperB[i].codeUnitAt(0) + 1000 : idxB;
+      if (orderA != orderB) return orderA.compareTo(orderB);
+    }
+    return a.length.compareTo(b.length);
+  }
+
   // Helper method to get neighborhoods for a district
   static List<String> getNeighborhoods(String district, String province) {
     final key = '$district ($province)';
-    return districts[key] ?? [];
+    final list = List<String>.from(districts[key] ?? []);
+    list.sort(_turkishCompare);
+    return list;
   }
 
   // Helper method to get all provinces
   static List<String> getAllProvinces() {
-    return provinces.keys.toList()..sort();
+    return provinces.keys.toList()..sort(_turkishCompare);
   }
 
   // Helper method to get districts of a province
   static List<String> getDistricts(String province) {
-    return provinces[province] ?? [];
+    final list = List<String>.from(provinces[province] ?? []);
+    list.sort(_turkishCompare);
+    return list;
   }
 
   // Plaka numaraları
@@ -52882,7 +52903,9 @@ class LocationConstants {
     if (query.isEmpty) return districts;
 
     final lowerQuery = query.toLowerCase();
-    return districts.where((district) => district.toLowerCase().contains(lowerQuery)).toList();
+    final result = districts.where((district) => district.toLowerCase().contains(lowerQuery)).toList();
+    result.sort(_turkishCompare);
+    return result;
   }
 
   static List<String> searchNeighborhoods({required String district, required String province, required String query}) {
@@ -52890,6 +52913,8 @@ class LocationConstants {
     if (query.isEmpty) return neighborhoods;
 
     final lowerQuery = query.toLowerCase();
-    return neighborhoods.where((neighborhood) => neighborhood.toLowerCase().contains(lowerQuery)).toList();
+    final result = neighborhoods.where((neighborhood) => neighborhood.toLowerCase().contains(lowerQuery)).toList();
+    result.sort(_turkishCompare);
+    return result;
   }
 }

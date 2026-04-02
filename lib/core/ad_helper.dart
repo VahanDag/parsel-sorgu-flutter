@@ -19,6 +19,20 @@ class AdHelper {
     throw UnsupportedError('Unsupported platform');
   }
 
+  // Banner - HistoryScreen
+  static String get historyBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return _isTest
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-6142015479722071/3093576582';
+    } else if (Platform.isIOS) {
+      return _isTest
+          ? 'ca-app-pub-3940256099942544/2934735716'
+          : 'ca-app-pub-6142015479722071/9912369445';
+    }
+    throw UnsupportedError('Unsupported platform');
+  }
+
   // Banner - TKGMWebViewScreen
   static String get tkgmBannerAdUnitId {
     if (Platform.isAndroid) {

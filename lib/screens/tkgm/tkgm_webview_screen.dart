@@ -8,10 +8,10 @@ import 'package:parsel_sorgu/blocs/shared_url/shared_url_state.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_bloc.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_event.dart';
 import 'package:parsel_sorgu/blocs/tkgm/tkgm_state.dart';
+import 'package:parsel_sorgu/core/ad_helper.dart';
 import 'package:parsel_sorgu/screens/tkgm/widgets/location_loading_indicator_widget.dart';
 import 'package:parsel_sorgu/screens/tkgm/widgets/parsel_details_card_widget.dart';
 import 'package:parsel_sorgu/screens/widgets/banner_ad_widget.dart';
-import 'package:parsel_sorgu/core/ad_helper.dart';
 
 class TKGMWebViewScreen extends StatefulWidget {
   final String url;
@@ -113,30 +113,30 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
         ],
         child: BlocBuilder<TkgmBloc, TkgmState>(
           builder: (context, state) {
-          return Stack(
-            children: [
-              Column(
-                children: [
-                  if (state.progress < 1.0)
-                    LinearProgressIndicator(
-                      value: state.progress,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
-                    ),
-                  Expanded(
-                    child: InAppWebView(
-                      initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-                      initialSettings: InAppWebViewSettings(
-                        javaScriptEnabled: true,
-                        // useShouldOverrideUrlLoading: true,
-                        // domStorageEnabled: true,
+            return Stack(
+              children: [
+                Column(
+                  children: [
+                    if (state.progress < 1.0)
+                      LinearProgressIndicator(
+                        value: state.progress,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
                       ),
-                      onWebViewCreated: (controller) {
-                        context.read<TkgmBloc>().setWebViewController(controller);
-                      },
-                      onLoadStop: (controller, url) async {
-                        // TKGM popup reklamını otomatik kapat
-                        await controller.evaluateJavascript(source: """
+                    Expanded(
+                      child: InAppWebView(
+                        initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                        initialSettings: InAppWebViewSettings(
+                          javaScriptEnabled: true,
+                          // useShouldOverrideUrlLoading: true,
+                          // domStorageEnabled: true,
+                        ),
+                        onWebViewCreated: (controller) {
+                          context.read<TkgmBloc>().setWebViewController(controller);
+                        },
+                        onLoadStop: (controller, url) async {
+                          // TKGM popup reklamını otomatik kapat
+                          await controller.evaluateJavascript(source: """
                           (function() {
                             function dismissPopups() {
                               var closeBtn = document.getElementById('close-popup');
@@ -150,57 +150,57 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
                           })();
                         """);
 
-                        // Ekran goruntusu al ve gecmise kaydet
-                        if (!_screenshotTaken && widget.saveToHistory && widget.parselData != null) {
-                          _screenshotTaken = true;
-                          await Future.delayed(const Duration(seconds: 4));
-                          if (mounted) {
-                            final screenshot = await controller.takeScreenshot(
-                              screenshotConfiguration: ScreenshotConfiguration(
-                                compressFormat: CompressFormat.JPEG,
-                                quality: 70,
-                              ),
-                            );
-                            if (screenshot != null && mounted) {
-                              context.read<HistoryBloc>().add(
-                                AddHistoryEntryEvent(
-                                  parselData: widget.parselData!,
-                                  screenshotBytes: screenshot,
+                          // Ekran goruntusu al ve gecmise kaydet
+                          if (!_screenshotTaken && widget.saveToHistory && widget.parselData != null) {
+                            _screenshotTaken = true;
+                            await Future.delayed(const Duration(seconds: 4));
+                            if (mounted) {
+                              final screenshot = await controller.takeScreenshot(
+                                screenshotConfiguration: ScreenshotConfiguration(
+                                  compressFormat: CompressFormat.JPEG,
+                                  quality: 70,
                                 ),
                               );
+                              if (screenshot != null && mounted) {
+                                context.read<HistoryBloc>().add(
+                                      AddHistoryEntryEvent(
+                                        parselData: widget.parselData!,
+                                        screenshotBytes: screenshot,
+                                      ),
+                                    );
+                              }
                             }
                           }
-                        }
-                      },
-                      onProgressChanged: (controller, progress) {
-                        context.read<TkgmBloc>().add(WebViewProgressChangedEvent(progress / 100));
-                      },
+                        },
+                        onProgressChanged: (controller, progress) {
+                          context.read<TkgmBloc>().add(WebViewProgressChangedEvent(progress / 100));
+                        },
+                      ),
                     ),
-                  ),
-                  // Bottom banner reklam
-                  BannerAdWidget(adUnitId: AdHelper.tkgmBannerAdUnitId),
-                ],
-              ),
-
-              // Bilgi kartları
-              if (state.hasDistanceData || state.hasEdgeData)
-                ParselDetailsCardWidget(
-                  showDetails: state.showDetails,
-                  onToggleDetails: () {
-                    context.read<TkgmBloc>().add(const ToggleDetailsVisibilityEvent());
-                  },
-                  distanceData: state.distanceData,
-                  edgeLengths: state.edgeLengths,
-                  parselData: state.parselData,
+                    // Bottom banner reklam
+                    BannerAdWidget(adUnitId: AdHelper.tkgmBannerAdUnitId),
+                  ],
                 ),
 
-              // Yükleniyor göstergesi
-              LocationLoadingIndicatorWidget(
-                isLoadingLocation: state.isLoadingLocation,
-                isLoadingParselData: state.isLoadingParselData,
-              ),
-            ],
-          );
+                // Bilgi kartları
+                if (state.hasDistanceData || state.hasEdgeData)
+                  ParselDetailsCardWidget(
+                    showDetails: state.showDetails,
+                    onToggleDetails: () {
+                      context.read<TkgmBloc>().add(const ToggleDetailsVisibilityEvent());
+                    },
+                    distanceData: state.distanceData,
+                    edgeLengths: state.edgeLengths,
+                    parselData: state.parselData,
+                  ),
+
+                // Yükleniyor göstergesi
+                LocationLoadingIndicatorWidget(
+                  isLoadingLocation: state.isLoadingLocation,
+                  isLoadingParselData: state.isLoadingParselData,
+                ),
+              ],
+            );
           },
         ),
       ),
@@ -209,21 +209,24 @@ class _TKGMWebViewScreenState extends State<TKGMWebViewScreen> with WidgetsBindi
       floatingActionButton: BlocBuilder<TkgmBloc, TkgmState>(
         builder: (context, state) {
           return state.canShowLocationButton
-              ? FloatingActionButton.extended(
-                  onPressed: () {
-                    context.read<TkgmBloc>().add(const LoadLocationEvent());
-                  },
-                  icon: const Icon(
-                    Icons.my_location,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    'Konumu Al',
-                    style: TextStyle(
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 50),
+                  child: FloatingActionButton.extended(
+                    onPressed: () {
+                      context.read<TkgmBloc>().add(const LoadLocationEvent());
+                    },
+                    icon: const Icon(
+                      Icons.my_location,
                       color: Colors.white,
                     ),
+                    label: const Text(
+                      'Konumu Al',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                    backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  backgroundColor: Theme.of(context).primaryColor,
                 )
               : const SizedBox.shrink();
         },
