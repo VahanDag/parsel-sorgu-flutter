@@ -304,6 +304,7 @@ class _ParselSearchScreenState extends State<ParselSearchScreen> with TickerProv
                       ParselWebViewWidget(
                         showWebView: state.showWebView,
                         isLoading: state.isLoading,
+                        hasLoadedUrl: state.currentStep >= 1,
                         onWebViewCreated: (controller) {
                           context.read<ParselSearchingBloc>().setWebViewController(controller);
                           debugPrint('WebView oluşturuldu');

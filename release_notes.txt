@@ -1,0 +1,11 @@
+Sürüm Notu - v1.3.0 (Build 15)
+
+- Sorgu geçmişi eklendi: Daha önce yapılan parsel sorgularını kaydedip tekrar görüntüleyebilme özelliği eklendi. Geçmiş listesi, detay ekranı ve liste öğeleri ile birlikte tam bir geçmiş yönetimi sağlandı.
+- Alt navigasyon yapısı eklendi: Ana ekran artık shell yapısıyla yönetiliyor; parsel arama ve geçmiş ekranları arasında geçiş yapılabiliyor.
+- Reklam entegrasyonu iyileştirildi: Ekranlar genelinde reklam yönetimi merkezi hale getirildi (AdHelper sınıfı eklendi).
+- Konum verileri güncellendi: İl/ilçe/mahalle konum sabitleri genişletildi ve iyileştirildi.
+- Uygulama adı değiştirildi: "Parsel Aracı" yerine "Parsel Bul ve Sorgula" olarak güncellendi.
+- WebView placeholder eklendi: URL yüklenmeden önce WebView alanında uygulama logosu ve ismiyle bir yer tutucu gösterilmeye başlandı.
+- Manuel arama widget'ı geliştirildi: Manuel parsel arama arayüzü yeniden düzenlendi ve iyileştirildi.
+- Parsel detay kartı yenilendi: TKGM ekranındaki parsel bilgi kartı görsel olarak yeniden tasarlandı.
+- Kullanım kılavuzu eklendi: "Nasıl Çalışır?" bilgilendirme sayfasına tutorial GIF'i eklendi.

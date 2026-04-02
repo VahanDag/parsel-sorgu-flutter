@@ -6,6 +6,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 class ParselWebViewWidget extends StatelessWidget {
   final bool showWebView;
   final bool isLoading;
+  final bool hasLoadedUrl;
   final Function(InAppWebViewController) onWebViewCreated;
   final Function(InAppWebViewController, WebUri?) onLoadStart;
   final Function(InAppWebViewController, int) onProgressChanged;
@@ -17,6 +18,7 @@ class ParselWebViewWidget extends StatelessWidget {
     super.key,
     required this.showWebView,
     required this.isLoading,
+    this.hasLoadedUrl = false,
     required this.onWebViewCreated,
     required this.onLoadStart,
     required this.onProgressChanged,
@@ -47,7 +49,9 @@ class ParselWebViewWidget extends StatelessWidget {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: Builder(
+            child: Stack(
+              children: [
+                Builder(
               builder: (context) {
                 debugPrint('Creating InAppWebView widget');
                 return InAppWebView(
@@ -120,6 +124,39 @@ class ParselWebViewWidget extends StatelessWidget {
                   },
                 );
               },
+            ),
+                // Placeholder overlay - URL yüklenmemişken göster
+                if (!hasLoadedUrl)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.grey.shade100,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Opacity(
+                              opacity: 0.15,
+                              child: Image.asset(
+                                'assets/icon/icon.png',
+                                width: 96,
+                                height: 96,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Parsel Sorgu',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
       ],
